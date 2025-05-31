@@ -76,7 +76,7 @@
       <view class="card-header">
         <view class="card-icon treatment-icon">💡</view>
         <view class="card-title-section">
-          <text class="card-title">饲养建议</text>
+          <text class="card-title">治疗建议</text>
         </view>
       </view>
       <view class="card-content">

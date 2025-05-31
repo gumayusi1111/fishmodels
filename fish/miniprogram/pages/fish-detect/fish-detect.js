@@ -553,12 +553,23 @@ Page({
       } else {
         await this.analyzeVideo();
       }
+      
+      // 识别完成后，如果是通过后端抽帧的，清理帧文件
+      if (this.data.frameId) {
+        this.cleanupFrameFile(this.data.frameId);
+      }
+      
     } catch (error) {
       console.error('分析失败:', error);
       wx.showToast({
         title: '分析失败，请重试',
         icon: 'error'
       });
+      
+      // 即使识别失败，也要清理帧文件
+      if (this.data.frameId) {
+        this.cleanupFrameFile(this.data.frameId);
+      }
     } finally {
       this.setData({
         isAnalyzing: false,
@@ -1899,6 +1910,10 @@ Page({
             try {
               const data = JSON.parse(res.data);
               if (data.success) {
+                // 保存frameId用于后续清理
+                this.setData({
+                  frameId: data.frameId
+                });
                 resolve(data.frameUrl);
               } else {
                 reject(new Error(data.error || '后端抽帧失败'));
@@ -1941,6 +1956,22 @@ Page({
     } catch (error) {
       console.error('后端视频抽帧失败:', error);
       throw error; // 重新抛出错误，让上层处理
+    }
+  },
+
+  // 添加清理帧文件的方法
+  async cleanupFrameFile(frameId) {
+    try {
+      const response = await wx.request({
+        url: 'http://localhost:3000/cleanup-frame/' + frameId,
+        method: 'DELETE'
+      });
+      
+      if (response.data.success) {
+        console.log('帧文件已清理:', frameId);
+      }
+    } catch (error) {
+      console.error('清理帧文件失败:', error);
     }
   },
 
