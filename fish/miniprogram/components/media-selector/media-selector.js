@@ -2,113 +2,47 @@ Component({
   properties: {
     mediaType: {
       type: String,
-      value: 'image'
+      value: 'auto' // 改为自动检测
     }
   },
 
   data: {
-    mediaOptions: [
-      { 
-        type: 'image', 
-        text: '图片识别', 
-        icon: '📷', // 使用emoji或者设置为空
-        useTextIcon: true // 标记使用文字图标
-      },
-      { 
-        type: 'video', 
-        text: '视频分析', 
-        icon: '🎬', // 使用emoji或者设置为空
-        useTextIcon: true // 标记使用文字图标
-      }
-    ]
+    // 移除 mediaOptions 数组
   },
 
   methods: {
-    // 选择媒体类型
-    selectMediaType(e) {
-      const type = e.currentTarget.dataset.type;
-      this.setData({ mediaType: type });
-      
-      // 触发事件给父组件
-      this.triggerEvent('mediaTypeChange', { type });
-    },
+    // 移除 selectMediaType 方法
 
-    // 选择媒体文件
+    // 选择媒体文件 - 支持图片和视频
     chooseMedia() {
-      if (this.data.mediaType === 'image') {
-        this.chooseImage();
-      } else {
-        this.chooseVideo();
-      }
-    },
-
-    // 选择图片
-    chooseImage() {
       wx.chooseMedia({
         count: 1,
-        mediaType: ['image'],
+        mediaType: ['image', 'video'], // 同时支持图片和视频
         sourceType: ['album', 'camera'],
+        maxDuration: 30, // 视频最长30秒
         camera: 'back',
         success: (res) => {
-          const file = res.tempFiles[0];
+          const media = res.tempFiles[0];
+          const mediaType = media.fileType; // 'image' 或 'video'
           
-          // 检查文件大小（最大10MB）
-          if (file.size > 10 * 1024 * 1024) {
-            wx.showToast({
-              title: '图片过大，请选择小于10MB的图片',
-              icon: 'error',
-              duration: 2000
-            });
-            return;
-          }
-          
+          // 触发事件给父组件
           this.triggerEvent('mediaSelected', {
-            mediaUrl: file.tempFilePath,
-            mediaSize: this.formatFileSize(file.size),
-            mediaType: 'image'
+            mediaType: mediaType,
+            mediaUrl: media.tempFilePath,
+            mediaSize: this.formatFileSize(media.size),
+            duration: media.duration || 0
+          });
+          
+          // 同时触发类型变化事件
+          this.triggerEvent('mediaTypeChange', {
+            mediaType: mediaType,
+            mediaUrl: media.tempFilePath
           });
         },
         fail: (err) => {
-          console.error('选择图片失败:', err);
+          console.error('选择媒体失败:', err);
           wx.showToast({
-            title: '选择图片失败',
-            icon: 'error'
-          });
-        }
-      });
-    },
-
-    // 选择视频
-    chooseVideo() {
-      wx.chooseMedia({
-        count: 1,
-        mediaType: ['video'],
-        sourceType: ['album', 'camera'],
-        maxDuration: 30,
-        camera: 'back',
-        success: (res) => {
-          const file = res.tempFiles[0];
-          
-          // 检查文件大小（最大50MB）
-          if (file.size > 50 * 1024 * 1024) {
-            wx.showToast({
-              title: '视频过大，请选择小于50MB的视频',
-              icon: 'error',
-              duration: 2000
-            });
-            return;
-          }
-          
-          this.triggerEvent('mediaSelected', {
-            mediaUrl: file.tempFilePath,
-            mediaSize: this.formatFileSize(file.size),
-            mediaType: 'video'
-          });
-        },
-        fail: (err) => {
-          console.error('选择视频失败:', err);
-          wx.showToast({
-            title: '选择视频失败',
+            title: '选择失败',
             icon: 'error'
           });
         }
@@ -116,14 +50,12 @@ Component({
     },
 
     // 格式化文件大小
-    formatFileSize(size) {
-      if (size < 1024) {
-        return size + 'B';
-      } else if (size < 1024 * 1024) {
-        return (size / 1024).toFixed(1) + 'KB';
-      } else {
-        return (size / (1024 * 1024)).toFixed(1) + 'MB';
-      }
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
   }
 });

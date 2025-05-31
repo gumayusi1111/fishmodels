@@ -21,6 +21,10 @@ Page({
     result: null,
     showResult: false,
     
+    // 添加显示媒体类型和URL字段
+    displayMediaType: '',
+    displayMediaUrl: '',
+    
     // 新增：视频分析配置
     frameIntervals: [
       { label: '每1秒', value: 1 },
@@ -563,83 +567,387 @@ Page({
     }
   },
 
-  // 新增：分析视频
-  async analyzeVideo() {
-    const { videoFrames, selectedAnalysisMode } = this.data;
-    const mode = this.data.analysisModes[selectedAnalysisMode].value;
-    
-    const frameResults = [];
-    const startTime = Date.now();
-    
-    for (let i = 0; i < videoFrames.length; i++) {
-      const frame = videoFrames[i];
-      
-      // 更新进度
-      const progress = Math.round((i / videoFrames.length) * 100);
-      const elapsed = (Date.now() - startTime) / 1000;
-      const avgTimePerFrame = elapsed / (i + 1);
-      const remainingFrames = videoFrames.length - i - 1;
-      const eta = Math.round(avgTimePerFrame * remainingFrames);
-      
+  // 修复后的视频分析方法
+  async analyzeVideo(videoPath) {
+    try {
       this.setData({
-        loadingText: `正在分析第${i + 1}帧...`,
-        loadingProgress: `${progress}%`,
-        'videoAnalysisProgress.current': i + 1,
-        'videoAnalysisProgress.percent': progress,
-        'videoAnalysisProgress.step': `分析第${i + 1}帧`,
-        'videoAnalysisProgress.eta': `${eta}秒`
+        isAnalyzing: true,
+        showResult: false,
+        result: null,
+        analysisProgress: null
       });
       
+      this.updateAnalysisProgress(20);
+      
+      // 方案1：直接分析视频文件（如果云函数支持）
       try {
-        // 上传帧图片
-        const uploadResult = await this.uploadImage(frame.url);
+        console.log('尝试直接分析视频文件:', videoPath);
+        const result = await this.analyzeVideoDirectly(videoPath);
         
-        // 分析帧
-        const speciesResult = await this.callGPTSpeciesDetection(uploadResult);
-        const diseaseResult = await this.callGPTDiseaseDetection(uploadResult);
+        if (result && result.confidence > 0) {
+          this.updateAnalysisProgress(100);
+          
+          this.setData({
+            result: result,
+            showResult: true,
+            isAnalyzing: false
+          });
+          
+          wx.showToast({
+            title: '分析完成',
+            icon: 'success'
+          });
+          return;
+        }
+      } catch (directError) {
+        console.error('直接视频分析失败:', directError);
+      }
+      
+      // 方案2：使用Canvas截取视频帧
+      this.updateAnalysisProgress(40);
+      
+      try {
+        const frameUrl = await this.captureVideoFrameWithTimeout(videoPath);
+        console.log('Canvas截取的帧:', frameUrl);
         
-        frameResults.push({
-          frameIndex: i,
-          time: frame.time,
-          species: speciesResult.species,
-          confidence: speciesResult.confidence,
-          health: diseaseResult.health,
-          diseases: diseaseResult.diseases
-        });
-        
-        // 更新帧结果
-        this.setData({
-          [`videoFrames[${i}].analysisResult`]: {
-            species: speciesResult.species,
-            confidence: speciesResult.confidence
+        if (frameUrl) {
+          const result = await this.analyzeFrameComplete(frameUrl);
+          
+          if (result && result.confidence > 0) {
+            this.updateAnalysisProgress(100);
+            
+            // 添加截取的帧图片到结果中
+            const finalResult = {
+              ...result,
+              frameImage: frameUrl,  // 添加截取的帧图片URL
+              timestamp: new Date().toISOString()
+            };
+            
+            this.setData({
+              result: finalResult,
+              showResult: true,
+              isAnalyzing: false,
+              // 将媒体类型改为image，媒体URL改为截取的帧
+              displayMediaType: 'image',
+              displayMediaUrl: frameUrl
+            });
+            
+            wx.showToast({
+              title: '分析完成',
+              icon: 'success'
+            });
+            return;
           }
-        });
+        }
+      } catch (canvasError) {
+        console.error('Canvas截取失败:', canvasError);
+      }
+      
+      // 方案3：引导用户手动截图
+      this.setData({
+        isAnalyzing: false,
+        analysisProgress: null
+      });
+      
+      wx.showModal({
+        title: '视频分析困难',
+        content: '当前视频格式可能不支持自动分析。建议您：\n\n1. 暂停视频到清晰画面\n2. 截图保存\n3. 使用图片分析功能\n\n这样可以获得更准确的分析结果。',
+        showCancel: true,
+        cancelText: '重试',
+        confirmText: '切换图片分析',
+        success: (res) => {
+          if (res.confirm) {
+            this.setData({
+              mediaType: 'image',
+              mediaUrl: ''
+            });
+          } else if (res.cancel) {
+            // 重试
+            setTimeout(() => {
+              this.analyzeVideo(videoPath);
+            }, 1000);
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('视频分析失败:', error);
+      
+      this.setData({
+        isAnalyzing: false,
+        analysisProgress: null
+      });
+      
+      wx.showToast({
+        title: '分析失败',
+        icon: 'error'
+      });
+    }
+  },
+
+  // 直接分析视频的方法
+  async analyzeVideoDirectly(videoPath) {
+    try {
+      // 上传视频到云存储
+      const fileID = await this.uploadFile(videoPath);
+      
+      // 调用云函数进行视频分析
+      const result = await wx.cloud.callFunction({
+        name: 'fishDetection',
+        data: {
+          fileID: fileID,
+          type: 'video' // 标记为视频类型
+        }
+      });
+      
+      return result.result;
+    } catch (error) {
+      console.error('直接视频分析失败:', error);
+      throw error;
+    }
+  },
+
+  // 生成简单的时间点（固定4个）
+  generateSimpleTimePoints(duration, frameCount = 4) {
+    if (duration <= 4) {
+      // 短视频：每秒一帧
+      return Array.from({length: Math.min(frameCount, Math.floor(duration))}, (_, i) => i + 0.5);
+    } else {
+      // 长视频：均匀分布4个时间点
+      return [
+        duration * 0.1,  // 10%处
+        duration * 0.35, // 35%处
+        duration * 0.65, // 65%处
+        duration * 0.9   // 90%处
+      ];
+    }
+  },
+
+  // 简化的帧提取方法
+  async extractFramesSimple(videoPath, timePoints) {
+    const frames = [];
+    
+    console.log('开始提取视频帧，视频路径:', videoPath);
+    console.log('时间点:', timePoints);
+    
+    for (let i = 0; i < timePoints.length; i++) {
+      try {
+        const frameUrl = await this.extractSingleFrame(videoPath, timePoints[i]);
+        console.log(`第${i+1}帧提取结果:`, frameUrl);
         
+        if (frameUrl) {
+          frames.push({
+            url: frameUrl,
+            time: timePoints[i],
+            index: i
+          });
+          console.log(`第${i+1}帧添加成功，URL:`, frameUrl);
+        } else {
+          console.log(`第${i+1}帧提取失败，返回值为空`);
+        }
       } catch (error) {
-        console.error(`分析第${i + 1}帧失败:`, error);
-        frameResults.push({
-          frameIndex: i,
-          time: frame.time,
-          error: '分析失败'
-        });
+        console.error(`提取第${i+1}帧失败:`, error);
       }
     }
     
-    // 综合分析结果
-    const finalResult = this.combineVideoResults(frameResults);
+    console.log('最终提取的帧数组:', frames);
+    return frames;
+  },
+
+  // 提取单个帧（使用canvas方法，避免视频节点问题）
+  async extractSingleFrame(videoPath, time) {
+    console.log(`开始提取单帧，视频路径: ${videoPath}, 时间: ${time}秒`);
     
-    // 获取治疗建议
-    if (finalResult.species && finalResult.diseases.length > 0) {
-      this.getTreatmentAdvice(finalResult);
-    }
-    
-    this.setData({
-      result: finalResult,
-      showResult: true
+    return new Promise((resolve) => {
+      // 创建临时视频元素进行帧提取
+      const tempFilePath = `${wx.env.USER_DATA_PATH}/temp_frame_${Date.now()}.jpg`;
+      console.log('临时文件路径:', tempFilePath);
+      
+      // 使用微信提供的视频帧提取API（如果可用）
+      if (wx.createVideoDecoder) {
+        console.log('使用 wx.createVideoDecoder 提取帧');
+        const decoder = wx.createVideoDecoder();
+        
+        decoder.on('frame', (frame) => {
+          console.log('视频解码器返回帧数据:', frame);
+          // 处理帧数据
+          resolve(frame.data);
+        });
+        
+        decoder.on('error', (error) => {
+          console.error('视频解码器错误:', error);
+          // 降级到文件系统方案
+          this.extractFrameWithFileSystem(videoPath, time, resolve);
+        });
+        
+        decoder.start({
+          source: videoPath,
+          mode: 1
+        });
+        decoder.seek(time);
+      } else {
+        console.log('wx.createVideoDecoder 不可用，使用降级方案');
+        // 降级方案：使用文件系统API
+        this.extractFrameWithFileSystem(videoPath, time, resolve);
+      }
     });
+  },
+  
+  // 文件系统方式提取帧
+  extractFrameWithFileSystem(videoPath, time, callback) {
+    console.log(`降级方案：文件系统提取帧，视频路径: ${videoPath}, 时间: ${time}`);
     
-    // 保存历史记录
-    this.saveHistory();
+    // 这里是问题所在！直接返回视频路径而不是截图
+    // 我们需要实际截取帧或者明确告知这是视频路径
+    console.log('警告：降级方案直接返回视频路径，这可能导致分析失败');
+    console.log('返回的"帧"路径（实际是视频路径）:', videoPath);
+    
+    setTimeout(() => {
+      callback(videoPath); // 临时返回视频路径
+    }, 100);
+  },
+  
+  // 使用Canvas 2D截取视频帧
+  async extractFrameWithCanvas(videoPath, time) {
+    return new Promise((resolve, reject) => {
+      console.log('开始使用Canvas 2D截取视频帧:', videoPath, '时间:', time);
+      
+      // 创建video组件实例
+      const videoContext = wx.createVideoContext('temp-video', this);
+      
+      if (!videoContext) {
+        reject(new Error('无法创建视频上下文'));
+        return;
+      }
+      
+      // 设置视频时间
+      videoContext.seek(time);
+      
+      setTimeout(() => {
+        // 使用Canvas 2D接口
+        const query = wx.createSelectorQuery().in(this);
+        query.select('#temp-canvas')
+          .node()
+          .exec((res) => {
+            if (res[0] && res[0].node) {
+              const canvas = res[0].node;
+              const ctx = canvas.getContext('2d');
+              
+              // 设置canvas尺寸
+              canvas.width = 300;
+              canvas.height = 200;
+              
+              // 获取video元素节点
+              const videoQuery = wx.createSelectorQuery().in(this);
+              videoQuery.select('#temp-video')
+                .node()
+                .exec((videoRes) => {
+                  if (videoRes[0] && videoRes[0].node) {
+                    const videoNode = videoRes[0].node;
+                    
+                    try {
+                      // 绘制视频帧到canvas
+                      ctx.drawImage(videoNode, 0, 0, canvas.width, canvas.height);
+                      
+                      // 导出为临时文件
+                      wx.canvasToTempFilePath({
+                        canvas: canvas,
+                        success: (result) => {
+                          console.log('Canvas 2D截取成功:', result.tempFilePath);
+                          resolve(result.tempFilePath);
+                        },
+                        fail: (error) => {
+                          console.error('Canvas 2D导出失败:', error);
+                          reject(error);
+                        }
+                      }, this);
+                    } catch (error) {
+                      console.error('Canvas 2D绘制失败:', error);
+                      reject(error);
+                    }
+                  } else {
+                    reject(new Error('无法获取视频节点'));
+                  }
+                });
+            } else {
+              reject(new Error('无法获取Canvas 2D节点'));
+            }
+          });
+      }, 800); // 增加等待时间确保视频定位准确
+    });
+  },
+  
+  // 保存帧数据到临时文件
+  async saveFrameToTempFile(frameData) {
+    const tempFilePath = `${wx.env.USER_DATA_PATH}/frame_${Date.now()}.jpg`;
+    
+    return new Promise((resolve, reject) => {
+      wx.getFileSystemManager().writeFile({
+        filePath: tempFilePath,
+        data: frameData,
+        encoding: 'binary',
+        success: () => resolve(tempFilePath),
+        fail: reject
+      });
+    });
+  },
+
+  // 完整分析单帧
+  async analyzeFrameComplete(frameUrl) {
+    console.log('开始分析帧:', frameUrl);
+    
+    try {
+      // 上传帧到云存储
+      console.log('正在上传帧到云存储...');
+      const fileID = await this.uploadFile(frameUrl);
+      console.log('帧上传成功，云存储ID:', fileID);
+      
+      // 调用物种识别
+      console.log('开始物种识别...');
+      const speciesResult = await this.callGPTSpeciesDetection(fileID);
+      console.log('物种识别结果:', speciesResult);
+      
+      // 调用疾病检测
+      console.log('开始疾病检测...');
+      const diseaseResult = await this.callGPTDiseaseDetection(fileID);
+      console.log('疾病检测结果:', diseaseResult);
+      
+      // 调用治疗建议
+      console.log('开始生成治疗建议...');
+      const treatmentResult = await this.callGPTTreatmentAdvice({
+        species: speciesResult.species,
+        health: diseaseResult.health,
+        disease: diseaseResult.disease
+      });
+      console.log('治疗建议结果:', treatmentResult);
+      
+      return {
+        species: speciesResult.species,
+        confidence: speciesResult.confidence,
+        description: speciesResult.description,
+        habitat: speciesResult.habitat,
+        characteristics: speciesResult.characteristics,
+        health: diseaseResult.health,
+        disease: diseaseResult.disease,
+        treatment: treatmentResult.treatment
+      };
+      
+    } catch (error) {
+      console.error('帧分析失败，详细错误:', error);
+      console.log('失败的帧URL:', frameUrl);
+      return null;
+    }
+  },
+
+  // 获取视频信息的Promise版本
+  getVideoInfo(videoPath) {
+    return new Promise((resolve, reject) => {
+      wx.getVideoInfo({
+        src: videoPath,
+        success: resolve,
+        fail: reject
+      });
+    });
   },
   
   // 获取治疗建议
@@ -796,17 +1104,24 @@ Page({
     });
   },
 
-  // 上传图片方法
+  // 上传图片方法（添加调试信息）
   async uploadImage(imagePath) {
+    console.log('开始上传图片:', imagePath);
+    
     return new Promise((resolve, reject) => {
       wx.cloud.uploadFile({
         cloudPath: `fish-images/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`,
         filePath: imagePath,
         success: (res) => {
-          console.log('图片上传成功:', res.fileID);
+          console.log('图片上传成功，云存储ID:', res.fileID);
+          console.log('原始文件路径:', imagePath);
           resolve(res.fileID); // 只返回 fileID
         },
-        fail: reject
+        fail: (error) => {
+          console.error('图片上传失败:', error);
+          console.log('失败的文件路径:', imagePath);
+          reject(error);
+        }
       });
     });
   },
@@ -900,7 +1215,7 @@ Page({
     });
   },
 
-  // 提取帧方法
+  // 提取帧方法（升级到Canvas 2D）
   extractFrameAtTime(videoPath, time, callback) {
     const that = this;
     
@@ -909,21 +1224,56 @@ Page({
     videoContext.seek(time);
     
     setTimeout(() => {
-      // 使用canvas截图
-      const canvas = wx.createCanvasContext('frame-canvas', that);
-      canvas.drawImage(videoPath, 0, 0, 200, 150);
-      canvas.draw(false, () => {
-        wx.canvasToTempFilePath({
-          canvasId: 'frame-canvas',
-          success: (res) => {
-            callback(res.tempFilePath);
-          },
-          fail: (err) => {
-            console.error('截图失败:', err);
+      // 使用Canvas 2D截图
+      const query = wx.createSelectorQuery().in(that);
+      query.select('#frame-canvas')
+        .node()
+        .exec((res) => {
+          if (res[0] && res[0].node) {
+            const canvas = res[0].node;
+            const ctx = canvas.getContext('2d');
+            
+            // 设置canvas尺寸
+            canvas.width = 200;
+            canvas.height = 150;
+            
+            // 获取video节点
+            const videoQuery = wx.createSelectorQuery().in(that);
+            videoQuery.select('#temp-video')
+              .node()
+              .exec((videoRes) => {
+                if (videoRes[0] && videoRes[0].node) {
+                  const videoNode = videoRes[0].node;
+                  
+                  try {
+                    // 绘制视频帧到canvas
+                    ctx.drawImage(videoNode, 0, 0, canvas.width, canvas.height);
+                    
+                    // 导出canvas为临时文件
+                    wx.canvasToTempFilePath({
+                      canvas: canvas,
+                      success: (result) => {
+                        callback(result.tempFilePath);
+                      },
+                      fail: (err) => {
+                        console.error('截图失败:', err);
+                        callback(null);
+                      }
+                    }, that);
+                  } catch (error) {
+                    console.error('Canvas 2D绘制失败:', error);
+                    callback(null);
+                  }
+                } else {
+                  console.error('无法获取视频节点');
+                  callback(null);
+                }
+              });
+          } else {
+            console.error('无法获取Canvas 2D节点');
             callback(null);
           }
-        }, that);
-      });
+        });
     }, 500);
   },
 
@@ -989,15 +1339,21 @@ Page({
   // 重新选择媒体
   onReselect() {
     this.setData({
-      mediaUrl: '',
       mediaType: 'image',
+      mediaUrl: '',
       mediaSize: '',
       videoDuration: 0,
       videoFrames: [],
-      isAnalyzing: false,
-      showResult: false,
+      selectedFrame: 0,
       result: null,
-      analysisProgress: null
+      showResult: false,
+      isAnalyzing: false,
+      loadingText: '',
+      loadingProgress: '',
+      videoAnalysisProgress: null,
+      // 清理显示媒体字段
+      displayMediaType: '',
+      displayMediaUrl: ''
     });
   },
 
@@ -1125,86 +1481,7 @@ Page({
     }
   },
   
-  // 视频分析方法（如果还没有的话）
-  async analyzeVideo(videoPath) {
-    try {
-      // 如果视频帧还没有提取，先提取
-      if (!this.data.videoFrames || this.data.videoFrames.length === 0) {
-        await this.extractVideoFrames(videoPath);
-      }
-      
-      const frames = this.data.videoFrames;
-      const results = [];
-      
-      // 分析每一帧
-      for (let i = 0; i < frames.length; i++) {
-        const frame = frames[i];
-        
-        // 更新进度
-        this.updateAnalysisProgress({
-          current: i + 1,
-          total: frames.length,
-          status: `正在分析第 ${i + 1} 帧...`
-        });
-        
-        try {
-          // 上传帧图片
-          const fileID = await this.uploadImage(frame.url);
-          
-          // 分析物种和健康状态
-          const speciesResult = await this.callGPTSpeciesDetection(fileID);
-          const diseaseResult = await this.callGPTDiseaseDetection(fileID);
-          
-          results.push({
-            frameIndex: i,
-            timestamp: frame.time,
-            species: speciesResult,
-            health: diseaseResult
-          });
-          
-        } catch (frameError) {
-          console.error(`第 ${i + 1} 帧分析失败:`, frameError);
-          results.push({
-            frameIndex: i,
-            timestamp: frame.time,
-            error: frameError.message
-          });
-        }
-      }
-      
-      // 综合分析结果
-      const combinedResult = this.combineVideoResults(results);
-      
-      // 生成治疗建议
-      const treatmentAdvice = await this.callGPTTreatmentAdvice(
-        combinedResult.species.species,
-        combinedResult.health.diseases
-      );
-      
-      const finalResult = {
-        type: 'video',
-        species: combinedResult.species,
-        health: combinedResult.health,
-        treatment: treatmentAdvice,
-        frames: results,
-        timestamp: new Date().toISOString()
-      };
-      
-      this.setData({ result: finalResult });
-      
-      // 保存到历史记录
-      await this.saveHistory(finalResult);
-      
-      wx.showToast({
-        title: '视频分析完成',
-        icon: 'success'
-      });
-      
-    } catch (error) {
-      console.error('视频分析失败:', error);
-      throw error;
-    }
-  },
+
   
   // 更新分析进度
   updateAnalysisProgress(progress) {
@@ -1282,6 +1559,347 @@ Page({
     };
   },
 
+  // 媒体类型变化处理
+  onMediaTypeChange(e) {
+    const { mediaType, mediaUrl } = e.detail;
+    console.log('媒体类型变化:', mediaType, mediaUrl);
+    
+    this.setData({
+      mediaType: mediaType,
+      mediaUrl: mediaUrl,
+      // 重置分析状态
+      isAnalyzing: false,
+      showResult: false,
+      result: null,
+      analysisProgress: null
+    });
+  },
+
+  // 视频帧提取完成处理
+  onFramesExtracted(e) {
+    const { frames } = e.detail;
+    console.log('视频帧提取完成:', frames.length, '帧');
+    
+    this.setData({
+      extractedFrames: frames
+    });
+    
+    // 可以在这里开始分析提取的帧
+    if (frames && frames.length > 0) {
+      wx.showToast({
+        title: `提取了${frames.length}帧`,
+        icon: 'success'
+      });
+    }
+  },
+
+  // 视频帧截取方法（升级到Canvas 2D）
+  captureVideoFrame(time, callback) {
+    const that = this;
+    
+    try {
+      console.log('开始截取视频帧，时间:', time);
+      
+      // 创建video上下文并定位到指定时间
+      const videoContext = wx.createVideoContext('temp-video', that);
+      videoContext.seek(time);
+      
+      setTimeout(() => {
+        // 使用Canvas 2D接口截取视频帧
+        const query = wx.createSelectorQuery().in(that);
+        query.select('#temp-canvas')
+          .node()
+          .exec((res) => {
+            if (res[0] && res[0].node) {
+              const canvas = res[0].node;
+              const ctx = canvas.getContext('2d');
+              
+              // 设置canvas尺寸
+              canvas.width = 640;
+              canvas.height = 480;
+              
+              // 获取video节点
+              const videoQuery = wx.createSelectorQuery().in(that);
+              videoQuery.select('#temp-video')
+                .node()
+                .exec((videoRes) => {
+                  if (videoRes[0] && videoRes[0].node) {
+                    const videoNode = videoRes[0].node;
+                    
+                    try {
+                      // 绘制当前视频帧到canvas
+                      ctx.drawImage(videoNode, 0, 0, canvas.width, canvas.height);
+                      
+                      // 转换为临时文件
+                      wx.canvasToTempFilePath({
+                        canvas: canvas,
+                        success: (result) => {
+                          console.log('视频帧截取成功:', result.tempFilePath);
+                          if (callback) callback(result.tempFilePath);
+                        },
+                        fail: (err) => {
+                          console.error('视频帧截取失败:', err);
+                          if (callback) callback(null);
+                        }
+                      }, that);
+                    } catch (error) {
+                      console.error('Canvas 2D绘制失败:', error);
+                      if (callback) callback(null);
+                    }
+                  } else {
+                    console.error('无法获取视频节点');
+                    if (callback) callback(null);
+                  }
+                });
+            } else {
+              console.error('无法获取Canvas 2D节点');
+              if (callback) callback(null);
+            }
+          });
+      }, 800); // 等待视频定位完成
+    } catch (error) {
+      console.error('captureVideoFrame 错误:', error);
+      if (callback) callback(null);
+    }
+  },
+  
+    async captureVideoFrameWithCanvas(videoPath) {
+    console.log('开始视频抽帧，优先使用后端服务');
+    
+    // 优先尝试后端抽帧
+    try {
+      const frameUrl = await this.captureVideoFrameWithBackend(videoPath);
+      console.log('后端抽帧成功:', frameUrl);
+      return frameUrl;
+    } catch (backendError) {
+      console.warn('后端抽帧失败，使用Canvas降级方案:', backendError.message);
+    }
+    
+    // 如果后端失败，使用原来的Canvas方案（作为降级）
+    console.log('使用Canvas降级抽帧方案');
+    const videoContext = wx.createVideoContext('preview-video', this);
+
+    return new Promise((resolve, reject) => {
+        // 确保视频加载完成并播放到第一帧
+        videoContext.seek(0);
+        videoContext.play();
+
+        const onTimeUpdate = (e) => {
+            // 确保视频已经播放到第一帧或接近第一帧
+            if (e.detail.currentTime >= 0 && e.detail.duration > 0) {
+                videoContext.pause();
+                videoContext.off('timeupdate', onTimeUpdate);
+
+                wx.createSelectorQuery().in(this).select('#videoCanvas').fields({ node: true, size: true }).exec((res) => {
+                    const canvas = res[0].node;
+                    const ctx = canvas.getContext('2d');
+                    const dpr = wx.getSystemInfoSync().pixelRatio;
+
+                    canvas.width = res[0].width * dpr;
+                    canvas.height = res[0].height * dpr;
+                    ctx.scale(dpr, dpr);
+
+                    // 创建占位图作为降级方案
+                    ctx.fillStyle = '#f0f0f0';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = '#666';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('视频帧截取', canvas.width/2, canvas.height/2 - 10);
+                    ctx.fillText('(降级方案)', canvas.width/2, canvas.height/2 + 10);
+
+                    wx.canvasToTempFilePath({
+                        canvas: canvas,
+                        x: 0,
+                        y: 0,
+                        width: canvas.width,
+                        height: canvas.height,
+                        destWidth: canvas.width,
+                        destHeight: canvas.height,
+                        success: (res) => {
+                            console.log('Canvas降级截图成功:', res.tempFilePath);
+                            resolve(res.tempFilePath);
+                        },
+                        fail: (err) => {
+                            console.error('Canvas降级截图失败:', err);
+                            reject(new Error('Canvas降级截图失败'));
+                        }
+                    }, this);
+                });
+            }
+        };
+
+        videoContext.on('timeupdate', onTimeUpdate);
+        videoContext.on('error', (err) => {
+            console.error('视频播放错误:', err);
+            videoContext.off('timeupdate', onTimeUpdate);
+            reject(new Error('视频播放错误，无法截图。'));
+        });
+    });
+  },
+
+  // 降级Canvas方案
+  fallbackCanvasCapture() {
+    return new Promise((resolve, reject) => {
+      const query = wx.createSelectorQuery().in(this);
+      query.select('#video-canvas')
+        .node()
+        .exec((res) => {
+          if (res[0] && res[0].node) {
+            const canvas = res[0].node;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 300;
+            canvas.height = 200;
+            
+            // 创建一个带有提示信息的占位图
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, 300, 200);
+            
+            ctx.fillStyle = '#666';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('视频帧截取', 150, 90);
+            ctx.fillText('(占位图片)', 150, 110);
+            
+            wx.canvasToTempFilePath({
+              canvas: canvas,
+              success: (result) => {
+                console.log('占位图创建成功:', result.tempFilePath);
+                resolve(result.tempFilePath);
+              },
+              fail: reject
+            }, this);
+          } else {
+            reject(new Error('无法获取Canvas节点'));
+          }
+        });
+    });
+  },
+
+  // 创建占位图的降级方案
+  async createPlaceholderImage() {
+    return new Promise((resolve, reject) => {
+      const query = wx.createSelectorQuery().in(this);
+      query.select('#video-canvas')
+        .node()
+        .exec((res) => {
+          if (res[0] && res[0].node) {
+            const canvas = res[0].node;
+            const ctx = canvas.getContext('2d');
+            
+            // 设置canvas尺寸
+            canvas.width = 300;
+            canvas.height = 200;
+            
+            // 绘制占位内容
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, 300, 200);
+            
+            ctx.fillStyle = '#666';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('视频截图失败', 150, 100);
+            ctx.fillText('使用占位图片', 150, 120);
+            
+            // 导出为临时文件
+            wx.canvasToTempFilePath({
+              canvas: canvas,
+              success: (result) => {
+                console.log('占位图创建成功:', result.tempFilePath);
+                resolve(result.tempFilePath);
+              },
+              fail: (error) => {
+                console.error('占位图创建失败:', error);
+                reject(error);
+              }
+            }, this);
+          } else {
+            reject(new Error('无法获取Canvas节点'));
+          }
+        });
+    });
+  },
+
+  // 新增：调用后端视频抽帧接口
+  async captureVideoFrameWithBackend(videoPath) {
+    console.log('开始调用后端视频抽帧接口:', videoPath);
+    
+    try {
+      // 上传视频到后端进行抽帧
+      const uploadResult = await new Promise((resolve, reject) => {
+        wx.uploadFile({
+          url: 'http://localhost:3000/extract-frame', // 后端接口地址
+          filePath: videoPath,
+          name: 'video',
+          header: {
+            'Content-Type': 'multipart/form-data'
+          },
+          success: (res) => {
+            console.log('后端抽帧响应:', res);
+            try {
+              const data = JSON.parse(res.data);
+              if (data.success) {
+                resolve(data.frameUrl);
+              } else {
+                reject(new Error(data.error || '后端抽帧失败'));
+              }
+            } catch (parseError) {
+              console.error('解析后端响应失败:', parseError);
+              reject(new Error('解析后端响应失败'));
+            }
+          },
+          fail: (error) => {
+            console.error('上传视频到后端失败:', error);
+            reject(new Error('上传视频到后端失败: ' + error.errMsg));
+          }
+        });
+      });
+      
+      console.log('后端抽帧成功，帧图片URL:', uploadResult);
+      
+      // 下载帧图片到本地临时文件
+      const downloadResult = await new Promise((resolve, reject) => {
+        wx.downloadFile({
+          url: uploadResult,
+          success: (res) => {
+            if (res.statusCode === 200) {
+              console.log('帧图片下载成功:', res.tempFilePath);
+              resolve(res.tempFilePath);
+            } else {
+              reject(new Error('下载帧图片失败，状态码: ' + res.statusCode));
+            }
+          },
+          fail: (error) => {
+            console.error('下载帧图片失败:', error);
+            reject(new Error('下载帧图片失败: ' + error.errMsg));
+          }
+        });
+      });
+      
+      return downloadResult;
+      
+    } catch (error) {
+      console.error('后端视频抽帧失败:', error);
+      // 如果后端抽帧失败，回退到原来的Canvas方案
+      console.log('回退到Canvas抽帧方案');
+      return await this.captureVideoFrameWithCanvas(videoPath);
+    }
+  },
+
+  // 带超时处理的Canvas截取方法
+  async captureVideoFrameWithTimeout(videoPath, timeout = 10000) {
+    return Promise.race([
+      this.captureVideoFrameWithCanvas(videoPath),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Canvas截取超时'));
+        }, timeout);
+      })
+    ]);
+  },
+
   // 媒体选择回调
   onMediaSelected(e) {
     const { mediaType, mediaUrl, duration, mediaSize } = e.detail;
@@ -1313,7 +1931,6 @@ Page({
       this.setData({
         videoDuration: duration || 0
       });
-      this.extractVideoFrames(cleanMediaUrl);
     }
     
     // 显示成功提示

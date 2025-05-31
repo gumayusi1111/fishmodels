@@ -1,18 +1,8 @@
 <view class="media-selector">
-  <view class="media-options">
-    <view wx:for="{{mediaOptions}}" wx:key="type" 
-          class="media-option {{mediaType === item.type ? 'active' : ''}}" 
-          bindtap="selectMediaType" 
-          data-type="{{item.type}}">
-      
-      <!-- 只使用文字图标 -->
-      <text class="media-option-icon-text">{{item.icon}}</text>
-      <text class="media-text">{{item.text}}</text>
-    </view>
-  </view>
+  <!-- 移除媒体选项切换 -->
   
   <view class="upload-area" bindtap="chooseMedia">
     <text class="upload-icon-text">📤</text>
-    <text class="upload-text">{{mediaType === 'image' ? '点击拍照或选择图片' : '点击录制或选择视频'}}</text>
+    <text class="upload-text">点击拍照/录像或选择文件</text>
   </view>
 </view>

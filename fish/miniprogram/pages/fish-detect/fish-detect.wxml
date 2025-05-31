@@ -17,35 +17,12 @@
 
   <!-- 媒体预览 -->
   <view wx:if="{{mediaUrl}}" class="media-preview">
-    <!-- 添加调试信息 -->
-    <view class="debug-info" style="background: #f0f0f0; padding: 10rpx; margin-bottom: 20rpx; font-size: 24rpx;">
-      <text>调试信息:</text>
-      <text>\nmediaUrl: {{mediaUrl}}</text>
-      <text>\nmediaType: {{mediaType}}</text>
-      <text>\nmediaUrl长度: {{mediaUrl.length}}</text>
-    </view>
-    
-    <image 
-      wx:if="{{mediaType === 'image'}}" 
-      class="preview-image" 
-      src="{{mediaUrl}}" 
-      mode="aspectFit"
-      binderror="onImageError"
-      bindload="onImageLoad">
-    </image>
-    <video wx:if="{{mediaType === 'video'}}" class="preview-video" src="{{mediaUrl}}" controls></video>
+    <video wx:if="{{mediaType === 'video'}}" id="preview-video" class="preview-video" src="{{mediaUrl}}" controls></video>
     
     <view class="media-info">
       <text class="media-size">{{mediaSize}}</text>
     </view>
   </view>
-
-  <!-- 视频分析组件 -->
-  <video-analyzer 
-    wx:if="{{mediaType === 'video' && mediaUrl}}"
-    video-url="{{mediaUrl}}"
-    bind:framesExtracted="onFramesExtracted">
-  </video-analyzer>
 
   <!-- 分析按钮 -->
   <view wx:if="{{mediaUrl}}" class="action-section">
@@ -64,11 +41,10 @@
 
   <!-- 分析结果组件 -->
   <view wx:if="{{showResult && result}}" class="result-container">
-    <text class="debug-text">showResult: {{showResult}}, result存在: {{!!result}}</text>
-    
     <analysis-result 
       result="{{result}}"
-      media-type="{{mediaType}}"
+      media-type="{{displayMediaType || mediaType}}"
+      media-url="{{displayMediaUrl || mediaUrl}}"
       show-result="{{showResult}}"
       bind:saveResult="saveToHistory"
       bind:shareResult="onShareResult"
@@ -77,3 +53,4 @@
     </analysis-result>
   </view>
 </view>
+

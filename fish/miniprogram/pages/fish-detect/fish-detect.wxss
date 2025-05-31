@@ -107,15 +107,30 @@
 .media-preview {
   background: white;
   border-radius: 25rpx;
-  padding: 30rpx;
+  padding: 20rpx; /* 减少内边距 */
   box-shadow: 0 8rpx 25rpx rgba(0,0,0,0.1);
+  margin: 20rpx 10rpx; /* 减少外边距 */
+  width: calc(100% - 20rpx); /* 确保宽度充分利用 */
 }
 
 .preview-image, .preview-video {
   width: 100%;
-  max-height: 500rpx;
+  max-height: none; /* 移除高度限制 */
+  min-height: 300rpx;
   border-radius: 15rpx;
   margin-bottom: 20rpx;
+  object-fit: contain;
+  background: #f5f5f5;
+}
+
+/* 针对视频的特殊样式 */
+.preview-video {
+  height: 400rpx; /* 给视频固定一个合适的高度 */
+}
+
+/* 移除可能导致CSS错误的样式 */
+.media-options {
+  display: none; /* 隐藏媒体选项 */
 }
 
 .media-info {

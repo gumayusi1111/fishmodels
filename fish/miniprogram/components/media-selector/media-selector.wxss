@@ -126,3 +126,39 @@
 .upload-icon {
   display: none;
 }
+
+/* 简化样式，避免CSS错误 */
+.media-selector {
+  padding: 20rpx;
+}
+
+.upload-area {
+  background: rgba(255,255,255,0.95);
+  border-radius: 25rpx;
+  padding: 60rpx 40rpx;
+  text-align: center;
+  border: 3rpx dashed #ddd;
+  transition: all 0.3s ease;
+}
+
+.upload-area:active {
+  transform: scale(0.98);
+  background: rgba(255,255,255,1);
+}
+
+.upload-icon-text {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.upload-text {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 隐藏不需要的媒体选项样式 */
+.media-options {
+  display: none;
+}
