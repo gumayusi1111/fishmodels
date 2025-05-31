@@ -1,14 +1,13 @@
-const { HistoryManager } = require('../../utils/fishDetectUtils.js');
+const { HistoryManager, UserAuthManager } = require('../../utils/fishDetectUtils.js');
 
 Page({
   data: {
     loading: true,
     historyList: [],
-    // 添加详情相关数据
-    showDetail: false,
-    currentRecord: null,
-    // 添加授权状态
-    needAuth: false
+    needAuth: false,
+    // 详情模态框相关
+    showDetailModal: false,
+    currentDetail: null
   },
 
   onLoad() {
@@ -24,8 +23,10 @@ Page({
     try {
       this.setData({ loading: true, needAuth: false });
       
+      // 检查云开发初始化状态
+      console.log('云开发状态:', wx.cloud);
+      
       // 检查用户授权状态
-      const { UserAuthManager } = require('../../utils/fishDetectUtils');
       const userInfo = UserAuthManager.checkUserAuth();
       
       console.log('用户授权信息:', userInfo);
@@ -40,19 +41,43 @@ Page({
         return;
       }
       
-      // 改为静态方法调用
-      const { HistoryManager } = require('../../utils/fishDetectUtils');
+      // 测试数据库连接
+      const db = wx.cloud.database();
+      console.log('数据库实例:', db);
+      
+      // 获取历史记录
       const historyList = await HistoryManager.getHistory();
       
       console.log('查询到的历史记录:', historyList);
       console.log('历史记录数量:', historyList.length);
-      console.log('第一条记录结构:', historyList[0]);
       
-      // 格式化时间显示
+      if (historyList.length > 0) {
+        console.log('第一条记录结构:', historyList[0]);
+      }
+      
+      // 格式化时间显示和处理视频封面
       const formattedList = historyList.map((item, index) => {
         console.log(`记录${index}:`, item);
+        
+        // 清理 mediaUrl 中的反引号、空格和其他特殊字符
+        let cleanMediaUrl = item.mediaUrl || '';
+        if (cleanMediaUrl) {
+          cleanMediaUrl = cleanMediaUrl.trim().replace(/`/g, '').replace(/"/g, '').replace(/'/g, '');
+          console.log(`清理前: ${item.mediaUrl}`);
+          console.log(`清理后: ${cleanMediaUrl}`);
+        }
+        
+        // 处理视频封面
+        let coverUrl = '';
+        if (item.mediaType === 'video' && item.result && item.result.keyFrames && item.result.keyFrames.length > 0) {
+          // 使用第一帧作为封面
+          coverUrl = item.result.keyFrames[0].frameUrl;
+        }
+        
         return {
           ...item,
+          mediaUrl: cleanMediaUrl,
+          coverUrl: coverUrl,
           createTime: this.formatTime(item.createTime)
         };
       });
@@ -65,23 +90,40 @@ Page({
         needAuth: false
       }, () => {
         console.log('setData完成，当前historyList长度:', this.data.historyList.length);
+        console.log('当前页面数据状态:', {
+          loading: this.data.loading,
+          needAuth: this.data.needAuth,
+          historyListLength: this.data.historyList.length,
+          firstItem: this.data.historyList[0]
+        });
+        
+        // 检查页面元素是否存在
+        wx.createSelectorQuery().in(this)
+          .select('.history-list')
+          .boundingClientRect((rect) => {
+            console.log('history-list元素信息:', rect);
+          }).exec();
       });
     } catch (error) {
       console.error('加载历史记录失败:', error);
+      console.error('错误详情:', error.message);
+      console.error('错误堆栈:', error.stack);
+      
       this.setData({ 
         loading: false
       });
+      
       wx.showToast({
-        title: '加载失败',
-        icon: 'error'
+        title: '加载失败: ' + error.message,
+        icon: 'none',
+        duration: 3000
       });
     }
   },
 
-  // 添加用户授权方法
+  // 用户授权方法
   async getUserProfile() {
     try {
-      const { UserAuthManager } = require('../../utils/fishDetectUtils');
       await UserAuthManager.getUserProfile();
       wx.showToast({
         title: '授权成功',
@@ -114,67 +156,35 @@ Page({
     }
   },
 
-  // 在viewDetail方法中添加状态映射
-  viewDetail(e) {
-    const index = e.currentTarget.dataset.index;
-    const record = this.data.historyList[index];
-    
-    // 添加状态类名映射
-    const statusClassMap = {
-      '健康': 'status-healthy',
-      '异常': 'status-abnormal', 
-      '疑似': 'status-suspected'
-    };
-    
-    const processedRecord = {
-      ...record,
-      statusClass: statusClassMap[record.result?.health?.status] || ''
-    };
-    
-    console.log('查看详情:', processedRecord);
-    
+  // 显示详情
+  showDetail(e) {
+    const item = e.currentTarget.dataset.item;
     this.setData({
-      showDetail: true,
-      currentRecord: processedRecord
+      currentDetail: item,
+      showDetailModal: true
     });
   },
 
-  // 关闭详情
-  closeDetail() {
+  // 隐藏详情
+  hideDetail() {
     this.setData({
-      showDetail: false,
-      currentRecord: null
+      showDetailModal: false,
+      currentDetail: null
     });
   },
 
-  // 删除记录
-  async deleteRecord(record) {
-    try {
-      // 改为静态方法调用
-      await HistoryManager.deleteHistory(record._id);
-      
+  // 分享详情
+  shareDetail() {
+    const record = this.data.currentDetail;
+    if (!record || !record.result) {
       wx.showToast({
-        title: '删除成功',
-        icon: 'success'
+        title: '没有可分享的内容',
+        icon: 'none'
       });
-      
-      // 重新加载历史记录
-      this.loadHistory();
-    } catch (error) {
-      console.error('删除失败:', error);
-      wx.showToast({
-        title: '删除失败',
-        icon: 'error'
-      });
+      return;
     }
-  },
-
-  // 分享记录
-  shareRecord() {
-    const record = this.data.currentRecord;
-    if (!record || !record.result) return;
     
-    const shareText = `鱼类检测结果：\n品种：${record.result.species?.name || '未知'}\n健康状态：${record.result.health?.status || '未知'}\n置信度：${record.result.species?.confidence || 0}%`;
+    const shareText = `鱼类检测结果：\n品种：${record.result.species?.name || record.result.species || '未知'}\n置信度：${record.result.species?.confidence || record.result.confidence || 0}%\n检测时间：${record.createTime}`;
     
     wx.setClipboardData({
       data: shareText,
@@ -187,67 +197,77 @@ Page({
     });
   },
 
+  // 删除历史记录
+  async deleteHistory(e) {
+    const id = e.currentTarget.dataset.id;
+    
+    const res = await wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条历史记录吗？',
+      confirmText: '删除',
+      confirmColor: '#ff4d4f'
+    });
+    
+    if (res.confirm) {
+      try {
+        wx.showLoading({ title: '删除中...' });
+        
+        await HistoryManager.deleteHistory(id);
+        
+        // 重新加载历史记录
+        await this.loadHistory();
+        
+        // 关闭详情模态框
+        this.hideDetail();
+        
+        wx.hideLoading();
+        wx.showToast({
+          title: '删除成功',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('删除历史记录失败:', error);
+        wx.hideLoading();
+        wx.showToast({
+          title: '删除失败',
+          icon: 'error'
+        });
+      }
+    }
+  },
+
+  // 图片加载错误处理
+  onImageError(e) {
+    console.log('图片加载失败:', e.detail);
+    // 可以设置默认图片
+    const index = e.currentTarget.dataset.index;
+    if (index !== undefined) {
+      console.log('图片加载失败:', this.data.historyList[index]?.mediaUrl);
+      
+      // 设置默认占位图
+      const updateKey = `historyList[${index}].mediaUrl`;
+      this.setData({
+        [updateKey]: '/images/placeholder.png'
+      });
+    }
+  },
+
+  // 返回上一页
   goBack() {
     wx.navigateBack({
       delta: 1
     });
   },
-  
-  // 处理滑动事件
-  onItemMove(e) {
-    const { x } = e.detail;
-    const index = e.currentTarget.dataset.index;
-    const threshold = -120; // 滑动阈值
-    
-    // 更新当前项的位置
-    const historyList = this.data.historyList;
-    historyList[index].x = x;
-    
-    this.setData({
-      historyList: historyList
+
+  // 页面状态检查方法
+  checkPageState() {
+    const { loading, needAuth, historyList } = this.data;
+    console.log('页面状态检查:', {
+      loading,
+      needAuth,
+      historyListLength: historyList.length,
+      shouldShowList: !loading && !needAuth && historyList.length > 0,
+      shouldShowEmpty: !loading && !needAuth && historyList.length === 0
     });
-  },
-  
-  // 处理触摸结束事件
-  onItemTouchEnd(e) {
-    const { x } = e.detail;
-    const index = e.currentTarget.dataset.index;
-    const threshold = -60; // 显示删除按钮的阈值
-    
-    const historyList = this.data.historyList;
-    
-    // 如果滑动距离超过阈值，显示删除按钮
-    if (x < threshold) {
-      historyList[index].x = -120;
-    } else {
-      historyList[index].x = 0;
-    }
-    
-    this.setData({
-      historyList: historyList
-    });
-  },
-  
-  // 确认删除
-  confirmDelete(e) {
-    const index = e.currentTarget.dataset.index;
-    const record = this.data.historyList[index];
-    
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这条历史记录吗？',
-      success: (res) => {
-        if (res.confirm) {
-          this.deleteRecord(record);
-        } else {
-          // 取消删除，恢复位置
-          const historyList = this.data.historyList;
-          historyList[index].x = 0;
-          this.setData({
-            historyList: historyList
-          });
-        }
-      }
-    });
-  },
+  }
 });

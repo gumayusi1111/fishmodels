@@ -1104,6 +1104,59 @@ Page({
     });
   },
 
+  // 保存到历史记录
+  async saveToHistory() {
+    if (!this.data.result) {
+      wx.showToast({
+        title: '没有可保存的结果',
+        icon: 'error'
+      });
+      return;
+    }
+
+    try {
+      // 检查用户授权
+      const userProfile = await UserAuthManager.getUserProfile();
+      if (!userProfile) {
+        wx.showToast({
+          title: '请先授权登录',
+          icon: 'error'
+        });
+        return;
+      }
+
+      wx.showLoading({
+        title: '保存中...'
+      });
+
+      // 准备历史记录数据
+      const historyData = {
+        mediaType: this.data.mediaType,
+        mediaUrl: this.data.mediaUrl,
+        result: this.data.result,
+        createTime: new Date(),
+        userId: userProfile.userId
+      };
+
+      // 保存到历史记录
+      await HistoryManager.saveHistory(historyData);
+
+      wx.hideLoading();
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success'
+      });
+
+    } catch (error) {
+      console.error('保存历史记录失败:', error);
+      wx.hideLoading();
+      wx.showToast({
+        title: '保存失败',
+        icon: 'error'
+      });
+    }
+  },
+
   // 上传图片方法（添加调试信息）
   async uploadImage(imagePath) {
     console.log('开始上传图片:', imagePath);
@@ -1827,6 +1880,11 @@ Page({
     console.log('开始调用后端视频抽帧接口:', videoPath);
     
     try {
+      // 检查视频路径是否为本地临时文件
+      if (videoPath.includes('__tmp__') || videoPath.includes('127.0.0.1')) {
+        console.log('检测到本地临时文件，直接上传到后端');
+      }
+      
       // 上传视频到后端进行抽帧
       const uploadResult = await new Promise((resolve, reject) => {
         wx.uploadFile({
@@ -1882,9 +1940,7 @@ Page({
       
     } catch (error) {
       console.error('后端视频抽帧失败:', error);
-      // 如果后端抽帧失败，回退到原来的Canvas方案
-      console.log('回退到Canvas抽帧方案');
-      return await this.captureVideoFrameWithCanvas(videoPath);
+      throw error; // 重新抛出错误，让上层处理
     }
   },
 

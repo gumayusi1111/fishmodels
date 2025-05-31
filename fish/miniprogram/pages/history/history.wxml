@@ -13,50 +13,56 @@
 
   <!-- 加载状态 -->
   <view wx:elif="{{loading}}" class="loading">
+    <view class="loading-spinner"></view>
     <text>加载中...</text>
   </view>
 
   <!-- 历史记录列表 -->
   <view wx:elif="{{historyList.length > 0}}" class="history-list">
+    <view class="list-header">
+      <text class="record-count">共 {{historyList.length}} 条记录</text>
+    </view>
     
-    <view wx:for="{{historyList}}" wx:key="_id" class="history-item-wrapper">
-      <!-- 使用movable-area和movable-view实现滑动删除 -->
-      <movable-area class="movable-area">
-        <movable-view 
-          class="movable-item" 
-          direction="horizontal" 
-          x="{{item.x || 0}}"
-          damping="50"
-          friction="5"
-          bindchange="onItemMove"
-          bindtouchend="onItemTouchEnd"
-          data-index="{{index}}">
-          
-          <view class="history-item" bindtap="viewDetail" data-index="{{index}}">
-            <!-- 媒体预览 -->
-            <view class="media-preview">
-              <image wx:if="{{item.mediaType === 'image'}}" class="preview-thumb" src="{{item.mediaUrl}}" mode="aspectFill"></image>
-              <video wx:if="{{item.mediaType === 'video'}}" class="preview-thumb" src="{{item.mediaUrl}}" poster="{{item.mediaUrl}}"></video>
-            </view>
-            
-            <!-- 分析结果摘要 -->
-            <view class="result-summary">
-              <!-- 修复数据绑定路径 -->
-              <view class="species">{{item.result.species.name || item.result.species || '未知品种'}}</view>
-              <view class="confidence">置信度: {{item.result.species.confidence || item.result.confidence || 0}}%</view>
-              <view class="time">{{item.createTime}}</view>
-            </view>
-            
-            <!-- 箭头图标 -->
-            <view class="arrow">></view>
+    <view wx:for="{{historyList}}" wx:key="_id" class="history-item-card" bindtap="showDetail" data-item="{{item}}">
+      <!-- 媒体预览 -->
+      <view class="media-preview">
+        <image wx:if="{{item.mediaType === 'image'}}" 
+               src="{{item.mediaUrl}}" 
+               mode="aspectFill"
+               class="preview-image"
+               binderror="onImageError"></image>
+        <image wx:elif="{{item.mediaType === 'video' && item.coverUrl}}" 
+               src="{{item.coverUrl}}" 
+               mode="aspectFill"
+               class="preview-image"
+               binderror="onImageError"></image>
+        <view wx:else class="video-placeholder">
+          <text class="video-icon">🎥</text>
+          <text class="video-text">视频</text>
+        </view>
+        <view class="media-type-badge">{{item.mediaType === 'image' ? '图片' : '视频'}}</view>
+      </view>
+      
+      <!-- 内容信息 -->
+      <view class="content-info">
+        <view class="species-info">
+          <text class="species-name">{{item.result.species.name || item.result.species || '未知品种'}}</text>
+          <view class="confidence-badge confidence-{{item.result.species.confidence >= 80 ? 'high' : item.result.species.confidence >= 60 ? 'medium' : 'low'}}">
+            {{item.result.species.confidence || item.result.confidence || 0}}%
           </view>
-          
-          <!-- 删除按钮 -->
-          <view class="delete-btn" bindtap="confirmDelete" data-index="{{index}}">
-            <text>删除</text>
-          </view>
-        </movable-view>
-      </movable-area>
+        </view>
+        <view class="time-info">
+          <text class="time-text">{{item.createTime}}</text>
+        </view>
+        <view wx:if="{{item.result.healthStatus}}" class="health-status status-{{item.result.healthStatus}}">
+          {{item.result.healthStatus === 'healthy' ? '健康' : item.result.healthStatus === 'abnormal' ? '异常' : '疑似异常'}}
+        </view>
+      </view>
+      
+      <!-- 箭头指示器 -->
+      <view class="arrow-indicator">
+        <text class="arrow">›</text>
+      </view>
     </view>
   </view>
 
@@ -65,6 +71,73 @@
     <view class="empty-icon">📝</view>
     <text class="empty-title">暂无历史记录</text>
     <text class="empty-desc">开始分析鱼类图片或视频，记录将显示在这里</text>
+  </view>
+
+  <!-- 详情模态框 -->
+  <view wx:if="{{showDetailModal}}" class="detail-modal">
+    <view class="modal-mask" bindtap="hideDetail"></view>
+    <view class="modal-content">
+      <view class="detail-header">
+        <text class="detail-title">检测详情</text>
+        <view class="close-btn" bindtap="hideDetail">×</view>
+      </view>
+      
+      <scroll-view class="detail-body" scroll-y>
+        <!-- 媒体展示 -->
+        <view class="detail-media">
+          <image wx:if="{{currentDetail.mediaType === 'image'}}" 
+                 src="{{currentDetail.mediaUrl}}" 
+                 mode="aspectFit"
+                 class="detail-image"></image>
+          <video wx:else 
+                 src="{{currentDetail.mediaUrl}}" 
+                 class="detail-video"
+                 controls></video>
+        </view>
+        
+        <!-- 检测结果 -->
+        <view class="result-section">
+          <view class="section-title">检测结果</view>
+          <view class="result-item">
+            <text class="label">品种：</text>
+            <text class="value">{{currentDetail.result.species.name || currentDetail.result.species || '未知'}}</text>
+          </view>
+          <view class="result-item">
+            <text class="label">置信度：</text>
+            <text class="value">{{currentDetail.result.species.confidence || currentDetail.result.confidence || 0}}%</text>
+          </view>
+          <view wx:if="{{currentDetail.result.healthStatus}}" class="result-item">
+            <text class="label">健康状态：</text>
+            <text class="value status-{{currentDetail.result.healthStatus}}">{{currentDetail.result.healthStatus === 'healthy' ? '健康' : currentDetail.result.healthStatus === 'abnormal' ? '异常' : '疑似异常'}}</text>
+          </view>
+          <view class="result-item">
+            <text class="label">检测时间：</text>
+            <text class="value">{{currentDetail.createTime}}</text>
+          </view>
+        </view>
+        
+        <!-- 详细描述 -->
+        <view wx:if="{{currentDetail.result.description}}" class="result-section">
+          <view class="section-title">详细描述</view>
+          <text class="description">{{currentDetail.result.description}}</text>
+        </view>
+        
+        <!-- 健康问题 -->
+        <view wx:if="{{currentDetail.result.issues && currentDetail.result.issues.length > 0}}" class="result-section">
+          <view class="section-title">发现问题</view>
+          <view class="issues-list">
+            <view wx:for="{{currentDetail.result.issues}}" wx:key="*this" class="issue-item">
+              {{item}}
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      
+      <view class="detail-footer">
+        <button class="action-btn share-btn" bindtap="shareDetail">分享</button>
+        <button class="action-btn delete-btn" bindtap="deleteHistory" data-id="{{currentDetail._id}}">删除</button>
+      </view>
+    </view>
   </view>
 
   <button class="back-btn" bindtap="goBack">返回检测</button>
