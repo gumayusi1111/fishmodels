@@ -1054,10 +1054,10 @@ Page({
         icon: 'success'
       });
       
-      // 如果有分析结果，保存历史记录
-      if (this.data.result) {
-        this.saveHistory();
-      }
+      // 移除自动保存逻辑
+      // if (this.data.result) {
+      //   this.saveHistory();
+      // }
     } catch (error) {
       console.error('获取用户信息失败:', error);
       wx.showToast({
@@ -1522,9 +1522,9 @@ Page({
         currentShowResult: this.data.showResult
       });
 
-      // 保存到历史记录
-      await this.saveHistory();
-      console.log('历史记录保存完成');
+      // 移除自动保存到历史记录
+      // await this.saveHistory();
+      console.log('分析完成，等待用户手动保存');
 
       wx.showToast({
         title: '分析完成',

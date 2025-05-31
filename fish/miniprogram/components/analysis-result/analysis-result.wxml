@@ -109,9 +109,9 @@
 
   <!-- 操作按钮 -->
   <view class="action-buttons">
-    <button class="action-btn primary-btn" bindtap="saveResult">
+    <button class="action-btn primary-btn" bindtap="saveToHistory">
       <text class="btn-icon">💾</text>
-      <text class="btn-text">保存结果</text>
+      <text class="btn-text">保存到历史</text>
     </button>
     <button class="action-btn secondary-btn" bindtap="reselect">
       <text class="btn-icon">🔄</text>

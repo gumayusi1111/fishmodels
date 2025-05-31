@@ -42,15 +42,16 @@
   <!-- 分析结果组件 -->
   <view wx:if="{{showResult && result}}" class="result-container">
     <analysis-result 
+      wx:if="{{showResult && result}}"
       result="{{result}}"
-      media-type="{{displayMediaType || mediaType}}"
-      media-url="{{displayMediaUrl || mediaUrl}}"
+      media-type="{{mediaType}}"
       show-result="{{showResult}}"
-      bind:saveResult="saveToHistory"
-      bind:shareResult="onShareResult"
-      bind:viewHistory="onViewHistory"
-      bind:reselect="onReselect">
-    </analysis-result>
+      bind:saveResult="saveResult"
+      bind:saveToHistory="saveToHistory"
+      bind:shareResult="shareResult"
+      bind:viewHistory="viewHistory"
+      bind:reselect="reselect"
+    />
   </view>
 </view>
 

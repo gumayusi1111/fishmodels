@@ -33,9 +33,14 @@ Component({
       });
     },
     
-    // 保存结果
+    // 保存结果（原有功能保持不变）
     saveResult() {
       this.triggerEvent('saveResult');
+    },
+    
+    // 保存到历史记录（新增）
+    saveToHistory() {
+      this.triggerEvent('saveToHistory');
     },
     
     // 分享结果
