@@ -1,0 +1,58 @@
+<view class="video-analyzer">
+  <!-- 视频配置 -->
+  <view class="video-config">
+    <view class="config-title">视频分析设置</view>
+    
+    <view class="config-item">
+      <text class="config-label">抽帧间隔:</text>
+      <picker range="{{frameIntervals}}" range-key="label" value="{{selectedFrameInterval}}" bindchange="onFrameIntervalChange">
+        <view class="picker-value">{{frameIntervals[selectedFrameInterval].label}}</view>
+      </picker>
+    </view>
+    
+    <view class="config-item">
+      <text class="config-label">分析模式:</text>
+      <picker range="{{analysisModes}}" range-key="label" value="{{selectedAnalysisMode}}" bindchange="onAnalysisModeChange">
+        <view class="picker-value">{{analysisModes[selectedAnalysisMode].label}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 提取按钮 -->
+  <button class="extract-btn" bindtap="extractFrames" disabled="{{isExtracting}}">
+    {{isExtracting ? '提取中...' : '提取关键帧'}}
+  </button>
+
+  <!-- 提取进度 -->
+  <view wx:if="{{isExtracting}}" class="extract-progress">
+    <progress percent="{{extractProgress}}" stroke-width="6" activeColor="#1890ff"></progress>
+    <text class="progress-text">{{extractProgress}}%</text>
+  </view>
+
+  <!-- 视频帧预览 -->
+  <view wx:if="{{videoFrames.length > 0}}" class="video-frames">
+    <view class="frames-title">提取的关键帧 ({{videoFrames.length}}帧):</view>
+    <scroll-view class="frames-scroll" scroll-x>
+      <view wx:for="{{videoFrames}}" wx:key="index" class="frame-wrapper">
+        <image 
+          class="frame-image {{selectedFrame === index ? 'selected' : ''}}" 
+          src="{{item.url}}" 
+          mode="aspectFit"
+          bindtap="selectFrame"
+          data-index="{{index}}">
+        </image>
+        <text class="frame-time">{{item.time}}s</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 隐藏的视频元素用于截图 -->
+  <video 
+    id="temp-video" 
+    src="{{videoUrl}}"
+    style="position: fixed; top: -1000px; width: 320px; height: 240px; opacity: 0;"
+    muted="{{true}}"
+    autoplay="{{false}}"
+    controls="{{false}}">
+  </video>
+</view>

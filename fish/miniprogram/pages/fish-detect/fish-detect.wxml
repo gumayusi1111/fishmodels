@@ -1,0 +1,76 @@
+<view class="container">
+  <!-- 页面标题和历史按钮 -->
+  <view class="page-header">
+    <view class="title">智能鱼类诊断</view>
+    <button class="history-btn" bindtap="viewHistory">
+      <text class="history-icon">📋</text>
+      <text class="history-text">历史</text>
+    </button>
+  </view>
+
+  <!-- 媒体选择组件 -->
+  <media-selector 
+    media-type="{{mediaType}}"
+    bind:mediaTypeChange="onMediaTypeChange"
+    bind:mediaSelected="onMediaSelected">
+  </media-selector>
+
+  <!-- 媒体预览 -->
+  <view wx:if="{{mediaUrl}}" class="media-preview">
+    <!-- 添加调试信息 -->
+    <view class="debug-info" style="background: #f0f0f0; padding: 10rpx; margin-bottom: 20rpx; font-size: 24rpx;">
+      <text>调试信息:</text>
+      <text>\nmediaUrl: {{mediaUrl}}</text>
+      <text>\nmediaType: {{mediaType}}</text>
+      <text>\nmediaUrl长度: {{mediaUrl.length}}</text>
+    </view>
+    
+    <image 
+      wx:if="{{mediaType === 'image'}}" 
+      class="preview-image" 
+      src="{{mediaUrl}}" 
+      mode="aspectFit"
+      binderror="onImageError"
+      bindload="onImageLoad">
+    </image>
+    <video wx:if="{{mediaType === 'video'}}" class="preview-video" src="{{mediaUrl}}" controls></video>
+    
+    <view class="media-info">
+      <text class="media-size">{{mediaSize}}</text>
+    </view>
+  </view>
+
+  <!-- 视频分析组件 -->
+  <video-analyzer 
+    wx:if="{{mediaType === 'video' && mediaUrl}}"
+    video-url="{{mediaUrl}}"
+    bind:framesExtracted="onFramesExtracted">
+  </video-analyzer>
+
+  <!-- 分析按钮 -->
+  <view wx:if="{{mediaUrl}}" class="action-section">
+    <button class="action-btn analyze" bindtap="startAnalysis" disabled="{{isAnalyzing}}">
+      {{isAnalyzing ? '分析中...' : '开始分析'}}
+    </button>
+  </view>
+
+  <!-- 分析进度组件 -->
+  <analysis-progress 
+    wx:if="{{isAnalyzing}}"
+    is-analyzing="{{isAnalyzing}}"
+    media-type="{{mediaType}}"
+    progress="{{analysisProgress}}">
+  </analysis-progress>
+
+  <!-- 分析结果组件 -->
+  <analysis-result 
+    wx:if="{{showResult}}"
+    result="{{result}}"
+    media-type="{{mediaType}}"
+    show-result="{{showResult}}"
+    bind:saveResult="saveToHistory"
+    bind:shareResult="onShareResult"
+    bind:viewHistory="onViewHistory"
+    bind:reselect="onReselect">
+  </analysis-result>
+</view>

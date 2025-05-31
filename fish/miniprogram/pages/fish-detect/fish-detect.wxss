@@ -1,0 +1,423 @@
+/* pages/fish-detect/fish-detect.wxss */
+
+/* 页面容器 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20rpx;
+}
+
+/* 头部区域 */
+.header {
+  text-align: center;
+  padding: 40rpx 0;
+  color: white;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
+}
+
+.subtitle {
+  font-size: 28rpx;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* 功能选择区域 */
+.media-selector {
+  display: flex;
+  justify-content: space-around;
+  margin: 40rpx 0;
+  padding: 0 40rpx;
+}
+
+.media-option {
+  background: rgba(255,255,255,0.9);
+  border-radius: 20rpx;
+  padding: 30rpx 40rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  flex: 1;
+  margin: 0 10rpx;
+}
+
+.media-option.active {
+  background: white;
+  transform: translateY(-5rpx);
+  box-shadow: 0 12rpx 30rpx rgba(0,0,0,0.15);
+}
+
+.media-icon {
+  width: 60rpx;
+  height: 60rpx;
+  margin-bottom: 15rpx;
+}
+
+.media-text {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 上传区域 */
+.upload-section {
+  margin: 40rpx 20rpx;
+}
+
+.upload-area {
+  background: rgba(255,255,255,0.95);
+  border-radius: 25rpx;
+  padding: 80rpx 40rpx;
+  text-align: center;
+  border: 3rpx dashed #ddd;
+  transition: all 0.3s ease;
+}
+
+.upload-area:active {
+  transform: scale(0.98);
+  background: rgba(255,255,255,1);
+}
+
+.upload-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 30rpx;
+  opacity: 0.6;
+}
+
+.upload-text {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.upload-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 15rpx;
+  line-height: 1.4;
+}
+
+/* 媒体预览区域 */
+.media-preview {
+  background: white;
+  border-radius: 25rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 25rpx rgba(0,0,0,0.1);
+}
+
+.preview-image, .preview-video {
+  width: 100%;
+  max-height: 500rpx;
+  border-radius: 15rpx;
+  margin-bottom: 20rpx;
+}
+
+.media-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+  margin-bottom: 20rpx;
+}
+
+.media-type {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.media-size {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.media-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 20rpx;
+  border-radius: 15rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.reselect {
+  background: #f8f9fa;
+  color: #666;
+}
+
+.analyze {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+/* 分析状态 */
+.analyzing {
+  text-align: center;
+  padding: 60rpx 40rpx;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(255,255,255,0.3);
+  border-top: 4rpx solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 30rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: white;
+  font-size: 28rpx;
+  margin-bottom: 15rpx;
+}
+
+.loading-progress {
+  color: rgba(255,255,255,0.8);
+  font-size: 24rpx;
+}
+
+/* 结果展示区域 */
+.result-section {
+  background: white;
+  border-radius: 25rpx;
+  margin: 40rpx 20rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 25rpx rgba(0,0,0,0.1);
+}
+
+.result-header {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  padding: 30rpx;
+  text-align: center;
+}
+
+.result-title {
+  color: white;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.result-content {
+  padding: 40rpx 30rpx;
+}
+
+/* 识别结果卡片 */
+.result-card {
+  background: #f8f9fa;
+  border-radius: 15rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.card-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 15rpx;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.item-label {
+  font-size: 26rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 26rpx;
+  font-weight: bold;
+}
+
+.species {
+  color: #667eea;
+}
+
+.confidence {
+  color: #28a745;
+}
+
+.healthy {
+  color: #28a745;
+}
+
+.unhealthy {
+  color: #dc3545;
+}
+
+/* 疾病列表 */
+.disease-list {
+  margin-top: 15rpx;
+}
+
+.disease-item {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  margin: 5rpx 10rpx 5rpx 0;
+  display: inline-block;
+}
+
+/* 治疗建议 */
+.treatment-section {
+  background: #e8f5e8;
+  border-radius: 15rpx;
+  padding: 30rpx;
+  margin-top: 30rpx;
+}
+
+.treatment-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #155724;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.treatment-content {
+  font-size: 26rpx;
+  color: #155724;
+  line-height: 1.6;
+}
+
+/* 底部操作 */
+.bottom-actions {
+  padding: 40rpx 20rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.history {
+  background: rgba(255,255,255,0.9);
+  color: #667eea;
+  border: 2rpx solid #667eea;
+}
+
+.save-result {
+  background: #28a745;
+  color: white;
+}
+
+/* 视频帧预览 */
+.video-frames {
+  margin-top: 20rpx;
+}
+
+.frames-title {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+}
+
+.frames-list {
+  display: flex;
+  gap: 10rpx;
+  overflow-x: auto;
+}
+
+.frame-item {
+  flex-shrink: 0;
+  width: 120rpx;
+  height: 80rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid #ddd;
+}
+
+.frame-item.selected {
+  border-color: #667eea;
+}
+
+/* 页面头部 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 20rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+}
+
+.history-btn {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  border-radius: 16rpx;
+  padding: 12rpx 20rpx;
+  backdrop-filter: blur(10rpx);
+  transition: all 0.3s ease;
+}
+
+.history-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}
+
+.history-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.history-text {
+  font-size: 26rpx;
+  color: white;
+  font-weight: 600;
+}

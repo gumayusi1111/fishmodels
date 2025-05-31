@@ -1,0 +1,361 @@
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+}
+
+.history-list {
+  background-color: white;
+  border-radius: 20rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.media-preview {
+  width: 120rpx;
+  height: 120rpx;
+  margin-right: 30rpx;
+}
+
+.preview-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: 10rpx;
+}
+
+.result-summary {
+  flex: 1;
+}
+
+.species {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.confidence {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.arrow {
+  font-size: 32rpx;
+  color: #ccc;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+  margin-bottom: 50rpx;
+}
+
+.back-btn {
+  background-color: #007aff;
+  color: white;
+  border-radius: 50rpx;
+  padding: 20rpx 60rpx;
+}
+
+
+/* 详情模态框样式 */
+.detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 80%;
+  background: white;
+  border-radius: 20rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.detail-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  color: #999;
+  border-radius: 50%;
+  background: #f5f5f5;
+}
+
+.detail-body {
+  flex: 1;
+  padding: 30rpx;
+}
+
+.detail-media {
+  margin-bottom: 40rpx;
+}
+
+.detail-image, .detail-video {
+  width: 100%;
+  max-height: 400rpx;
+  border-radius: 15rpx;
+}
+
+.result-section {
+  margin-bottom: 40rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-bottom: 10rpx;
+  border-bottom: 2rpx solid #007AFF;
+}
+
+.result-item {
+  display: flex;
+  margin-bottom: 15rpx;
+  align-items: flex-start;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #666;
+  min-width: 140rpx;
+  margin-right: 20rpx;
+}
+
+.value {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1;
+}
+
+.description {
+  line-height: 1.6;
+}
+
+.status-healthy {
+  color: #52c41a;
+}
+
+.status-abnormal {
+  color: #ff4d4f;
+}
+
+.status-suspected {
+  color: #faad14;
+}
+
+.issues-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-item {
+  background: #fff2f0;
+  color: #ff4d4f;
+  padding: 10rpx 20rpx;
+  border-radius: 10rpx;
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+}
+
+.detail-footer {
+  display: flex;
+  padding: 30rpx;
+  gap: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 25rpx;
+  border-radius: 15rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.share-btn {
+  background: #007AFF;
+  color: white;
+}
+
+.delete-btn {
+  background: #ff4d4f;
+  color: white;
+}
+
+/* 滑动删除相关样式 */
+.history-item-wrapper {
+  position: relative;
+  margin-bottom: 20rpx;
+}
+
+.movable-area {
+  height: 200rpx;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.movable-item {
+  height: 200rpx;
+  width: 100%;
+  background: white;
+  border-radius: 15rpx;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 120rpx;
+  height: 200rpx;
+  background: #ff4757;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 15rpx 15rpx 0;
+}
+
+.delete-text {
+  color: white;
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+/* 调整原有历史项样式 */
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background: white;
+  border-radius: 15rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+  height: 140rpx;
+}
+
+.auth-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+  text-align: center;
+}
+
+.auth-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.auth-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.auth-desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+
+.auth-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50rpx;
+  padding: 20rpx 60rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.auth-btn:active {
+  opacity: 0.8;
+}
+
+.debug-info {
+  background-color: #f0f0f0;
+  padding: 20rpx;
+  margin: 20rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  color: #666;
+  border-left: 4rpx solid #007aff;
+}
+
+.debug-info text {
+  word-break: break-all;
+}

@@ -1,0 +1,165 @@
+.analysis-progress {
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* 进度标题 */
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.progress-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.progress-percentage {
+  font-size: 24rpx;
+  color: #2c5aa0;
+  font-weight: bold;
+}
+
+/* 进度条 */
+.progress-bar {
+  width: 100%;
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2c5aa0, #4a90e2);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+/* 当前步骤 */
+.current-step {
+  margin-bottom: 20rpx;
+}
+
+.step-text {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 视频帧进度 */
+.frame-progress {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.frame-info {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.frame-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  justify-content: center;
+}
+
+.frame-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60rpx;
+  padding: 8rpx;
+  border-radius: 8rpx;
+  transition: all 0.3s ease;
+}
+
+.frame-item.pending {
+  background: #f8f9fa;
+  border: 2rpx solid #e8e8e8;
+}
+
+.frame-item.analyzing {
+  background: #e6f7ff;
+  border: 2rpx solid #2c5aa0;
+  animation: pulse 1.5s infinite;
+}
+
+.frame-item.completed {
+  background: #f6ffed;
+  border: 2rpx solid #52c41a;
+}
+
+.frame-number {
+  font-size: 20rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.frame-status-icon {
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.frame-item.pending .frame-status-icon {
+  color: #ccc;
+}
+
+.frame-item.analyzing .frame-status-icon {
+  color: #2c5aa0;
+  animation: rotate 1s linear infinite;
+}
+
+.frame-item.completed .frame-status-icon {
+  color: #52c41a;
+}
+
+/* 取消按钮 */
+.progress-actions {
+  margin-top: 24rpx;
+}
+
+.cancel-btn {
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 40rpx;
+  height: 70rpx;
+  font-size: 26rpx;
+  min-width: 200rpx;
+}
+
+.cancel-btn:active {
+  opacity: 0.8;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

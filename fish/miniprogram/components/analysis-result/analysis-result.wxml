@@ -1,0 +1,69 @@
+<view class="analysis-result" wx:if="{{result}}">
+  <!-- 检测结果标题 -->
+  <view class="result-header">
+    <text class="result-title">检测结果</text>
+    <text class="confidence" wx:if="{{result.confidence}}">置信度: {{result.confidence}}%</text>
+  </view>
+
+  <!-- 物种信息 -->
+  <view class="species-info" wx:if="{{result.species}}">
+    <view class="species-name">
+      <text class="chinese-name">{{result.species.chinese_name}}</text>
+      <text class="scientific-name">{{result.species.scientific_name}}</text>
+    </view>
+    <view class="species-details">
+      <text class="family">科属: {{result.species.family}}</text>
+      <text class="habitat">栖息地: {{result.species.habitat}}</text>
+    </view>
+  </view>
+
+  <!-- 健康状态 -->
+  <view class="health-status" wx:if="{{result.health}}">
+    <view class="health-header">
+      <text class="health-title">健康状态</text>
+      <view class="health-score score-{{result.health.score >= 80 ? 'good' : result.health.score >= 60 ? 'fair' : 'poor'}}">
+        {{result.health.score}}/100
+      </view>
+    </view>
+    <view class="health-details">
+      <text class="health-description">{{result.health.description}}</text>
+    </view>
+  </view>
+
+  <!-- 视频分析结果 -->
+  <view class="video-analysis" wx:if="{{result.videoAnalysis}}">
+    <view class="analysis-header">
+      <text class="analysis-title">视频分析</text>
+    </view>
+    
+    <!-- 健康趋势图表 -->
+    <view class="health-trend" wx:if="{{result.videoAnalysis.healthTrend}}">
+      <text class="trend-title">健康趋势</text>
+      <view class="trend-chart">
+        <view class="trend-point" 
+              wx:for="{{result.videoAnalysis.healthTrend}}" 
+              wx:key="index"
+              style="left: {{item.time / result.videoAnalysis.duration * 100}}%; bottom: {{item.score}}%">
+          <view class="point-marker"></view>
+          <text class="point-label">{{item.score}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分析建议 -->
+    <view class="analysis-advice" wx:if="{{result.videoAnalysis.advice}}">
+      <text class="advice-title">分析建议</text>
+      <view class="advice-list">
+        <text class="advice-item" wx:for="{{result.videoAnalysis.advice}}" wx:key="index">
+          • {{item}}
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="result-actions">
+    <button class="action-btn save-btn" bindtap="onSaveResult">保存结果</button>
+    <button class="action-btn share-btn" bindtap="onShareResult">分享</button>
+  </view>
+</view>

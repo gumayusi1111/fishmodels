@@ -1,0 +1,128 @@
+/* 媒体选择器容器 */
+.media-selector {
+  padding: 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24rpx;
+  margin: 20rpx;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
+}
+
+.media-options {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20rpx;
+  padding: 8rpx;
+  backdrop-filter: blur(10rpx);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.media-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 16rpx;
+  border-radius: 16rpx;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.media-option.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 25rpx rgba(102, 126, 234, 0.4);
+}
+
+.media-icon {
+  width: 56rpx;
+  height: 56rpx;
+  margin-bottom: 12rpx;
+  font-size: 56rpx; /* 如果使用emoji */
+  transition: transform 0.3s ease;
+}
+
+.media-option.active .media-icon {
+  transform: scale(1.1);
+}
+
+.media-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 240rpx;
+  border: 3rpx dashed rgba(255, 255, 255, 0.6);
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10rpx);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.upload-area:active {
+  border-color: rgba(255, 255, 255, 0.9);
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.upload-icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.9;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+.upload-area:active .upload-icon {
+  transform: scale(1.1);
+}
+
+.upload-text {
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+
+.media-option-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 8px;
+}
+
+/* 如果使用文字图标 */
+/* 移除图片图标样式，只保留文字图标样式 */
+.media-option-icon-text {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #007AFF;
+  display: block;
+}
+
+.upload-icon-text {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #999;
+  display: block;
+}
+
+/* 隐藏或移除图片图标相关样式 */
+.media-option-icon {
+  display: none;
+}
+
+.upload-icon {
+  display: none;
+}

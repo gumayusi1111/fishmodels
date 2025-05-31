@@ -1,20 +1,47 @@
-// app.js
+const { CLOUD_CONFIG } = require('./config/env.js');
+
 App({
-  onLaunch: function () {
-    this.globalData = {
-      // env 参数说明：
-      //   env 参数决定接下来小程序发起的云开发调用（wx.cloud.xxx）会默认请求到哪个云环境的资源
-      //   此处请填入环境 ID, 环境 ID 可打开云控制台查看
-      //   如不填则使用默认环境（第一个创建的环境）
-      env: ""
-    };
+  async onLaunch() {
+    // 初始化云开发
     if (!wx.cloud) {
-      console.error("请使用 2.2.3 或以上的基础库以使用云能力");
+      console.error('请使用 2.2.3 或以上的基础库以使用云能力');
     } else {
       wx.cloud.init({
-        env: this.globalData.env,
+        env: CLOUD_CONFIG.envId,
         traceUser: true,
       });
+      console.log('云开发初始化成功，当前环境：', CLOUD_CONFIG.currentEnv);
+      
+      // 自动初始化数据库
+      await this.initDatabase();
     }
   },
+  
+  // 初始化数据库
+  async initDatabase() {
+    try {
+      const result = await wx.cloud.callFunction({
+        name: 'initDatabase'
+      });
+      
+      if (result.result.success) {
+        console.log('数据库初始化结果:', result.result.results);
+        
+        // 检查是否有创建失败的集合
+        const failedCollections = result.result.results.filter(r => r.status === 'error');
+        if (failedCollections.length > 0) {
+          console.warn('部分数据库集合创建失败:', failedCollections);
+        }
+      } else {
+        console.error('数据库初始化失败:', result.result.error);
+      }
+    } catch (error) {
+      console.error('调用数据库初始化函数失败:', error);
+      // 不影响应用正常启动
+    }
+  },
+  
+  globalData: {
+    userInfo: null
+  }
 });

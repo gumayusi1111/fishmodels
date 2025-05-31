@@ -1,0 +1,40 @@
+<view class="analysis-progress" wx:if="{{isAnalyzing}}">
+  <!-- 进度标题 -->
+  <view class="progress-header">
+    <text class="progress-title">{{progressText || '正在分析...'}}</text>
+    <text class="progress-percentage">{{Math.round(progress)}}%</text>
+  </view>
+
+  <!-- 进度条 -->
+  <view class="progress-bar">
+    <view class="progress-fill" style="width: {{progress}}%"></view>
+  </view>
+
+  <!-- 当前步骤 -->
+  <view class="current-step" wx:if="{{currentStep}}">
+    <text class="step-text">{{currentStep}}</text>
+  </view>
+
+  <!-- 视频分析特有的帧进度 -->
+  <view class="frame-progress" wx:if="{{mediaType === 'video' && frameProgress}}">
+    <text class="frame-info">帧分析进度: {{frameProgress.current}}/{{frameProgress.total}}</text>
+    <view class="frame-list">
+      <view class="frame-item" 
+            wx:for="{{frameProgress.frames}}" 
+            wx:key="index"
+            class="{{item.status}}">
+        <text class="frame-number">{{index + 1}}</text>
+        <view class="frame-status-icon">
+          <text wx:if="{{item.status === 'completed'}}">✓</text>
+          <text wx:elif="{{item.status === 'analyzing'}}">⟳</text>
+          <text wx:else="{{item.status === 'pending'}}">○</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 取消按钮 -->
+  <view class="progress-actions" wx:if="{{showCancel}}">
+    <button class="cancel-btn" bindtap="onCancelAnalysis">取消分析</button>
+  </view>
+</view>

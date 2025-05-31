@@ -1,0 +1,74 @@
+<view class="container">
+  <view class="header">
+    <text class="title">历史记录</text>
+  </view>
+
+  <!-- 调试信息 -->
+  <view wx:if="{{debugInfo}}" class="debug-info">
+    <text>调试信息: {{debugInfo}}</text>
+  </view>
+
+  <!-- 授权提示 -->
+  <view wx:if="{{needAuth}}" class="auth-prompt">
+    <view class="auth-icon">🔐</view>
+    <text class="auth-title">需要授权</text>
+    <text class="auth-desc">查看历史记录需要先授权获取用户信息</text>
+    <button class="auth-btn" bindtap="getUserProfile">立即授权</button>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:elif="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 历史记录列表 -->
+  <view wx:elif="{{historyList.length > 0}}" class="history-list">
+    <view wx:for="{{historyList}}" wx:key="_id" class="history-item-wrapper">
+      <!-- 使用movable-area和movable-view实现滑动删除 -->
+      <movable-area class="movable-area">
+        <movable-view 
+          class="movable-item" 
+          direction="horizontal" 
+          x="{{item.x || 0}}"
+          damping="50"
+          friction="5"
+          bindchange="onItemMove"
+          bindtouchend="onItemTouchEnd"
+          data-index="{{index}}">
+          
+          <view class="history-item" bindtap="viewDetail" data-index="{{index}}">
+            <!-- 媒体预览 -->
+            <view class="media-preview">
+              <image wx:if="{{item.mediaType === 'image'}}" class="preview-thumb" src="{{item.mediaUrl}}" mode="aspectFill"></image>
+              <video wx:if="{{item.mediaType === 'video'}}" class="preview-thumb" src="{{item.mediaUrl}}" poster="{{item.mediaUrl}}"></video>
+            </view>
+            
+            <!-- 分析结果摘要 -->
+            <view class="result-summary">
+              <view class="species">{{item.result.species.name || '未知品种'}}</view>
+              <view class="confidence">置信度: {{item.result.species.confidence || 0}}%</view>
+              <view class="time">{{item.createTime}}</view>
+            </view>
+            
+            <!-- 箭头图标 -->
+            <view class="arrow">></view>
+          </view>
+        </movable-view>
+        
+        <!-- 删除按钮 -->
+        <view class="delete-btn" bindtap="confirmDelete" data-index="{{index}}">
+          <text class="delete-text">删除</text>
+        </view>
+      </movable-area>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <view class="empty-icon">📝</view>
+    <text class="empty-title">暂无历史记录</text>
+    <text class="empty-desc">开始分析鱼类图片或视频，记录将显示在这里</text>
+  </view>
+
+  <button class="back-btn" bindtap="goBack">返回检测</button>
+</view>

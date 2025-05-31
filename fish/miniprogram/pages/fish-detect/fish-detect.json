@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "智能鱼类诊断",
+  "usingComponents": {
+    "media-selector": "../../components/media-selector/media-selector",
+    "video-analyzer": "../../components/video-analyzer/video-analyzer",
+    "analysis-result": "../../components/analysis-result/analysis-result",
+    "analysis-progress": "../../components/analysis-progress/analysis-progress"
+  }
+}
