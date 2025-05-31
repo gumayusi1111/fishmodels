@@ -63,14 +63,17 @@
   </analysis-progress>
 
   <!-- 分析结果组件 -->
-  <analysis-result 
-    wx:if="{{showResult}}"
-    result="{{result}}"
-    media-type="{{mediaType}}"
-    show-result="{{showResult}}"
-    bind:saveResult="saveToHistory"
-    bind:shareResult="onShareResult"
-    bind:viewHistory="onViewHistory"
-    bind:reselect="onReselect">
-  </analysis-result>
+  <view wx:if="{{showResult && result}}" class="result-container">
+    <text class="debug-text">showResult: {{showResult}}, result存在: {{!!result}}</text>
+    
+    <analysis-result 
+      result="{{result}}"
+      media-type="{{mediaType}}"
+      show-result="{{showResult}}"
+      bind:saveResult="saveToHistory"
+      bind:shareResult="onShareResult"
+      bind:viewHistory="onViewHistory"
+      bind:reselect="onReselect">
+    </analysis-result>
+  </view>
 </view>

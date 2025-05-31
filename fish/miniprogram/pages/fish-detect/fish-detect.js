@@ -303,7 +303,7 @@ Page({
       const uploadResult = await this.uploadImage(frameData.url);
       
       // 调用AI分析
-      const analysisResult = await this.callGPTSpeciesDetection(uploadResult.fileID);
+      const analysisResult = await this.callGPTSpeciesDetection(uploadResult);
       
       // 更新结果显示
       this.setData({
@@ -338,7 +338,7 @@ Page({
     for (let i = 0; i < frames.length; i++) {
       try {
         const uploadResult = await this.uploadImage(frames[i].url);
-        const analysisResult = await this.callGPTSpeciesDetection(uploadResult.fileID);
+        const analysisResult = await this.callGPTSpeciesDetection(uploadResult);
         
         results.push({
           frameIndex: i,
@@ -446,55 +446,57 @@ Page({
 
 
 
-  // 修改：提取视频帧（使用新的配置）
+  // 改进的视频抽帧方法
   extractVideoFrames(videoPath) {
     const that = this;
-    const { selectedFrameInterval, maxFrames } = this.data;
-    const interval = this.data.frameIntervals[selectedFrameInterval].value;
     
     wx.showLoading({
-      title: '正在提取关键帧...'
+      title: '正在分析视频...'
     });
     
+    // 获取视频信息
     wx.getVideoInfo({
       src: videoPath,
       success: (res) => {
-        const duration = res.duration;
-        that.setData({ videoDuration: Math.round(duration) });
+        console.log('视频信息:', res);
         
-        // 根据间隔和最大帧数计算提取点
-        const frameCount = Math.min(Math.floor(duration / interval), maxFrames);
+        const duration = res.duration;
+        const frameCount = Math.min(Math.ceil(duration / 2), 10); // 每2秒一帧，最多10帧
         const frames = [];
         let extractedCount = 0;
         
-        for (let i = 0; i < frameCount; i++) {
-          const time = i * interval;
-          if (time >= duration) break;
-          
+        // 智能选择关键帧时间点
+        const timePoints = that.generateKeyFrameTimePoints(duration, frameCount);
+        
+        timePoints.forEach((time, index) => {
           setTimeout(() => {
-            that.extractFrameAtTime(videoPath, time, (frameUrl) => {
-              if (frameUrl) {
+            that.extractFrameAtTimeImproved(videoPath, time, (frameData) => {
+              if (frameData) {
                 frames.push({
-                  url: frameUrl,
-                  time: Math.round(time * 10) / 10,
-                  index: i,
-                  analysisResult: null
+                  url: frameData,
+                  time: time,
+                  index: index
                 });
               }
               
               extractedCount++;
+              
+              // 更新进度
               wx.showLoading({
                 title: `提取帧 ${extractedCount}/${frameCount}`
               });
               
               if (extractedCount === frameCount) {
                 wx.hideLoading();
-                // 按时间排序
-                frames.sort((a, b) => a.time - b.time);
                 that.setData({
                   videoFrames: frames,
                   selectedFrame: 0
                 });
+                
+                // 自动分析第一帧
+                if (frames.length > 0) {
+                  that.analyzeVideoFrame(frames[0]);
+                }
                 
                 wx.showToast({
                   title: `成功提取${frames.length}帧`,
@@ -502,8 +504,8 @@ Page({
                 });
               }
             });
-          }, i * 300);
-        }
+          }, index * 300); // 减少间隔时间
+        });
       },
       fail: (err) => {
         wx.hideLoading();
@@ -593,8 +595,8 @@ Page({
         const uploadResult = await this.uploadImage(frame.url);
         
         // 分析帧
-        const speciesResult = await this.callGPTSpeciesDetection(uploadResult.fileID);
-        const diseaseResult = await this.callGPTDiseaseDetection(uploadResult.fileID);
+        const speciesResult = await this.callGPTSpeciesDetection(uploadResult);
+        const diseaseResult = await this.callGPTDiseaseDetection(uploadResult);
         
         frameResults.push({
           frameIndex: i,
@@ -662,7 +664,7 @@ Page({
       const uploadResult = await this.uploadImage(frameUrl);
       
       // 调用AI分析
-      const analysisResult = await this.callGPTSpeciesDetection(uploadResult.fileID);
+      const analysisResult = await this.callGPTSpeciesDetection(uploadResult);
       
       // 更新结果显示
       this.setData({
@@ -690,8 +692,14 @@ Page({
   formatFileSize: formatFileSize,
   
   // 保存历史记录
-  async saveHistory() {
-    await HistoryManager.saveHistory(this.data);
+  async saveHistory(resultData = null) {
+    // 如果传入了结果数据，使用传入的数据；否则使用this.data
+    const dataToSave = resultData ? {
+      ...this.data,
+      result: resultData
+    } : this.data;
+    
+    await HistoryManager.saveHistory(dataToSave);
   },
   
   // 查看历史记录
@@ -803,6 +811,11 @@ Page({
     });
   },
 
+  // 上传图片方法（兼容性别名）
+  async uploadFile(imagePath) {
+    return this.uploadImage(imagePath);
+  },
+
   // AI分析方法
   async callGPTSpeciesDetection(fileID) {
     return new Promise((resolve, reject) => {
@@ -848,16 +861,33 @@ Page({
   },
 
   // 治疗建议方法
-  async callGPTTreatmentAdvice(species, diseases) {
+  async callGPTTreatmentAdvice(analysisData) {
     return new Promise((resolve, reject) => {
+      // 兼容两种调用方式
+      let requestData;
+      if (typeof analysisData === 'string') {
+        // 旧的调用方式：callGPTTreatmentAdvice(species, diseases)
+        requestData = {
+          action: 'treatmentAdvice',
+          species: analysisData,
+          diseases: arguments[1],
+          aiConfig: AI_CONFIG
+        };
+      } else {
+        // 新的调用方式：callGPTTreatmentAdvice({species, health, disease})
+        requestData = {
+          action: 'treatmentAdvice',
+          species: analysisData.species,
+          health: analysisData.health,
+          disease: analysisData.disease,
+          diseases: analysisData.diseases,
+          aiConfig: AI_CONFIG
+        };
+      }
+      
       wx.cloud.callFunction({
         name: 'fishDetection',
-        data: {
-          action: 'treatmentAdvice',
-          species: species,
-          diseases: diseases,
-          aiConfig: AI_CONFIG
-        },
+        data: requestData,
         success: (res) => {
           if (res.result && res.result.success) {
             resolve(res.result.data);
@@ -1003,52 +1033,95 @@ Page({
     }
   },
   
-  // 图片分析方法
   async analyzeImage(imagePath) {
+    this.setData({
+      isAnalyzing: true,
+      analysisProgress: 0,
+      showResult: false,
+      result: null
+    });
+
     try {
+      console.log('开始图片分析:', imagePath);
+      
       // 压缩图片
-      const compressedPath = await this.compressImage(imagePath);
-      
-      // 上传到云存储
-      const fileID = await this.uploadImage(compressedPath);
-      console.log('获取到的文件ID:', fileID);
-      
-      // 调用AI分析
+      const compressedImagePath = await this.compressImage(imagePath);
+      console.log('图片压缩完成:', compressedImagePath);
+      this.updateAnalysisProgress(20);
+
+      // 上传图片到云存储
+      const fileID = await this.uploadFile(compressedImagePath);
+      console.log('图片上传完成:', fileID);
+      this.updateAnalysisProgress(40);
+
+      // 调用物种识别
+      console.log('开始物种识别...');
       const speciesResult = await this.callGPTSpeciesDetection(fileID);
+      console.log('物种识别结果:', speciesResult);
+      this.updateAnalysisProgress(60);
+
+      // 调用疾病检测
+      console.log('开始疾病检测...');
       const diseaseResult = await this.callGPTDiseaseDetection(fileID);
-      
-      // 生成治疗建议
-      const treatmentAdvice = await this.callGPTTreatmentAdvice(
-        speciesResult.species, 
-        diseaseResult.diseases
-      );
-      
-      // 设置分析结果
-      const result = {
-        type: 'image',
-        species: speciesResult,
-        health: diseaseResult,
-        treatment: treatmentAdvice,
+      console.log('疾病检测结果:', diseaseResult);
+      this.updateAnalysisProgress(80);
+
+      // 调用治疗建议
+      console.log('开始生成治疗建议...');
+      const treatmentResult = await this.callGPTTreatmentAdvice({
+        species: speciesResult.species,
+        health: diseaseResult.health,
+        disease: diseaseResult.disease
+      });
+      console.log('治疗建议结果:', treatmentResult);
+      this.updateAnalysisProgress(100);
+
+      // 组合最终结果
+      const finalResult = {
+        species: speciesResult.species || '未知',
+        confidence: speciesResult.confidence || 0,
+        description: speciesResult.description || '暂无描述',
+        habitat: speciesResult.habitat || '未知',
+        characteristics: speciesResult.characteristics || [],
+        health: diseaseResult.health || '未知',
+        disease: diseaseResult.disease || '无',
+        treatment: treatmentResult.treatment || '暂无建议',
         timestamp: new Date().toISOString()
       };
-      
-      // 修复：同时设置result和showResult
-      this.setData({ 
-        result,
-        showResult: true  // 添加这行来显示分析结果
+
+      console.log('最终分析结果:', finalResult);
+
+      this.setData({
+        result: finalResult,
+        showResult: true
       });
-      
+
+      console.log('设置结果显示:', {
+        result: finalResult,
+        showResult: true,
+        currentShowResult: this.data.showResult
+      });
+
       // 保存到历史记录
-      await this.saveHistory(result);
-      
+      await this.saveHistory();
+      console.log('历史记录保存完成');
+
       wx.showToast({
         title: '分析完成',
         icon: 'success'
       });
-      
+
     } catch (error) {
       console.error('图片分析失败:', error);
-      throw error;
+      wx.showToast({
+        title: `分析失败: ${error.message}`,
+        icon: 'none',
+        duration: 3000
+      });
+    } finally {
+      this.setData({
+        isAnalyzing: false
+      });
     }
   },
   
@@ -1076,7 +1149,7 @@ Page({
         
         try {
           // 上传帧图片
-          const fileID = await this.uploadImage(frame.path);
+          const fileID = await this.uploadImage(frame.url);
           
           // 分析物种和健康状态
           const speciesResult = await this.callGPTSpeciesDetection(fileID);
@@ -1084,7 +1157,7 @@ Page({
           
           results.push({
             frameIndex: i,
-            timestamp: frame.timestamp,
+            timestamp: frame.time,
             species: speciesResult,
             health: diseaseResult
           });
@@ -1093,7 +1166,7 @@ Page({
           console.error(`第 ${i + 1} 帧分析失败:`, frameError);
           results.push({
             frameIndex: i,
-            timestamp: frame.timestamp,
+            timestamp: frame.time,
             error: frameError.message
           });
         }
@@ -1135,12 +1208,34 @@ Page({
   
   // 更新分析进度
   updateAnalysisProgress(progress) {
-    this.setData({
-      analysisProgress: {
-        ...this.data.analysisProgress,
-        ...progress
-      }
-    });
+    console.log('更新分析进度:', progress);
+    if (typeof progress === 'number') {
+      this.setData({
+        analysisProgress: {
+          percentage: progress,
+          // 您可以根据需要添加其他描述性文本
+          text: `分析中... ${progress}%` 
+        },
+      });
+    } else if (typeof progress === 'object' && progress !== null) {
+      // 如果progress本身就是期望的对象结构，直接使用
+      // 或者根据实际情况调整，确保text等字段存在
+      this.setData({
+        analysisProgress: {
+          percentage: progress.percentage !== undefined ? progress.percentage : this.data.analysisProgress.percentage,
+          text: progress.text || (progress.percentage !== undefined ? `分析中... ${progress.percentage}%` : '处理中...')
+        }
+      });
+    } else {
+      // 处理其他意外情况，例如设置为一个默认的加载状态对象
+      this.setData({
+        analysisProgress: {
+          percentage: 0,
+          text: '正在初始化分析...'
+        }
+      });
+    }
+    console.log('更新后 analysisProgress:', this.data.analysisProgress);
   },
 
   // 综合视频分析结果

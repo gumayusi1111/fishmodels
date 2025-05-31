@@ -1,10 +1,28 @@
+/* 分析进度容器 */
 .analysis-progress {
-  padding: 30rpx;
-  background: #fff;
-  border-radius: 16rpx;
+  padding: 40rpx;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 24rpx;
   margin: 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-  text-align: center;
+  box-shadow: 0 12rpx 40rpx rgba(168, 237, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.analysis-progress::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
 }
 
 /* 进度标题 */
@@ -12,67 +30,104 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 28rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .progress-title {
-  font-size: 28rpx;
+  font-size: 32rpx;
   color: #333;
-  font-weight: bold;
+  font-weight: 700;
+  text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.8);
 }
 
 .progress-percentage {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #2c5aa0;
-  font-weight: bold;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  backdrop-filter: blur(10rpx);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 /* 进度条 */
 .progress-bar {
   width: 100%;
-  height: 12rpx;
-  background: #f0f0f0;
-  border-radius: 6rpx;
+  height: 16rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8rpx;
   overflow: hidden;
-  margin-bottom: 20rpx;
+  margin-bottom: 28rpx;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2c5aa0, #4a90e2);
-  border-radius: 6rpx;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #4facfe 100%);
+  border-radius: 8rpx;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 /* 当前步骤 */
 .current-step {
-  margin-bottom: 20rpx;
+  margin-bottom: 28rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .step-text {
-  font-size: 24rpx;
-  color: #666;
-  line-height: 1.5;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+  font-weight: 500;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.8);
 }
 
 /* 视频帧进度 */
 .frame-progress {
-  margin-top: 24rpx;
-  padding-top: 20rpx;
-  border-top: 2rpx solid #f0f0f0;
+  margin-top: 32rpx;
+  padding-top: 28rpx;
+  border-top: 2rpx solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 1;
 }
 
 .frame-info {
-  font-size: 24rpx;
-  color: #666;
-  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #555;
+  margin-bottom: 20rpx;
   display: block;
+  font-weight: 500;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.8);
 }
 
 .frame-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 16rpx;
   justify-content: center;
 }
 
@@ -80,36 +135,49 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 60rpx;
-  padding: 8rpx;
-  border-radius: 8rpx;
-  transition: all 0.3s ease;
+  width: 72rpx;
+  padding: 12rpx;
+  border-radius: 12rpx;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10rpx);
 }
 
 .frame-item.pending {
-  background: #f8f9fa;
-  border: 2rpx solid #e8e8e8;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(232, 232, 232, 0.8);
 }
 
 .frame-item.analyzing {
-  background: #e6f7ff;
-  border: 2rpx solid #2c5aa0;
-  animation: pulse 1.5s infinite;
+  background: rgba(79, 172, 254, 0.2);
+  border: 2rpx solid #4facfe;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  transform: scale(1.05);
 }
 
 .frame-item.completed {
-  background: #f6ffed;
+  background: rgba(82, 196, 26, 0.2);
   border: 2rpx solid #52c41a;
+  transform: scale(1.02);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8rpx rgba(79, 172, 254, 0);
+  }
 }
 
 .frame-number {
-  font-size: 20rpx;
+  font-size: 22rpx;
   color: #666;
-  margin-bottom: 4rpx;
+  margin-bottom: 6rpx;
+  font-weight: 600;
 }
 
 .frame-status-icon {
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: bold;
 }
 
@@ -118,48 +186,51 @@
 }
 
 .frame-item.analyzing .frame-status-icon {
-  color: #2c5aa0;
-  animation: rotate 1s linear infinite;
+  color: #4facfe;
+  animation: rotate-bounce 1s ease-in-out infinite;
 }
 
 .frame-item.completed .frame-status-icon {
   color: #52c41a;
+  animation: check-bounce 0.6s ease-out;
+}
+
+@keyframes rotate-bounce {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(1); }
+  75% { transform: rotate(270deg) scale(1.1); }
+}
+
+@keyframes check-bounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 /* 取消按钮 */
 .progress-actions {
-  margin-top: 24rpx;
+  margin-top: 32rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .cancel-btn {
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.9);
   color: #666;
-  border: none;
-  border-radius: 40rpx;
-  height: 70rpx;
-  font-size: 26rpx;
-  min-width: 200rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  border-radius: 44rpx;
+  height: 88rpx;
+  font-size: 28rpx;
+  min-width: 240rpx;
+  font-weight: 600;
+  backdrop-filter: blur(10rpx);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cancel-btn:active {
-  opacity: 0.8;
-}
-
-/* 动画效果 */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
 }

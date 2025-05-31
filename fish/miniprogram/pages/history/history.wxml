@@ -3,11 +3,6 @@
     <text class="title">历史记录</text>
   </view>
 
-  <!-- 调试信息 -->
-  <view wx:if="{{debugInfo}}" class="debug-info">
-    <text>调试信息: {{debugInfo}}</text>
-  </view>
-
   <!-- 授权提示 -->
   <view wx:if="{{needAuth}}" class="auth-prompt">
     <view class="auth-icon">🔐</view>
@@ -23,6 +18,7 @@
 
   <!-- 历史记录列表 -->
   <view wx:elif="{{historyList.length > 0}}" class="history-list">
+    
     <view wx:for="{{historyList}}" wx:key="_id" class="history-item-wrapper">
       <!-- 使用movable-area和movable-view实现滑动删除 -->
       <movable-area class="movable-area">
@@ -45,20 +41,21 @@
             
             <!-- 分析结果摘要 -->
             <view class="result-summary">
-              <view class="species">{{item.result.species.name || '未知品种'}}</view>
-              <view class="confidence">置信度: {{item.result.species.confidence || 0}}%</view>
+              <!-- 修复数据绑定路径 -->
+              <view class="species">{{item.result.species.name || item.result.species || '未知品种'}}</view>
+              <view class="confidence">置信度: {{item.result.species.confidence || item.result.confidence || 0}}%</view>
               <view class="time">{{item.createTime}}</view>
             </view>
             
             <!-- 箭头图标 -->
             <view class="arrow">></view>
           </view>
+          
+          <!-- 删除按钮 -->
+          <view class="delete-btn" bindtap="confirmDelete" data-index="{{index}}">
+            <text>删除</text>
+          </view>
         </movable-view>
-        
-        <!-- 删除按钮 -->
-        <view class="delete-btn" bindtap="confirmDelete" data-index="{{index}}">
-          <text class="delete-text">删除</text>
-        </view>
       </movable-area>
     </view>
   </view>

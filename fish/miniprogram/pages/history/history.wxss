@@ -356,6 +356,14 @@
   border-left: 4rpx solid #007aff;
 }
 
+.debug-text {
+  font-size: 24rpx;
+  color: #999;
+  padding: 10rpx;
+  background: #f5f5f5;
+  margin: 10rpx 0;
+}
+
 .debug-info text {
   word-break: break-all;
 }

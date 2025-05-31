@@ -28,16 +28,14 @@ Page({
       const { UserAuthManager } = require('../../utils/fishDetectUtils');
       const userInfo = UserAuthManager.checkUserAuth();
       
-      console.log('用户授权信息:', userInfo); // 添加调试信息
+      console.log('用户授权信息:', userInfo);
       
       if (!userInfo) {
-        console.log('用户未授权，显示授权提示'); // 添加调试信息
-        // 用户未授权，显示授权提示
+        console.log('用户未授权，显示授权提示');
         this.setData({
           loading: false,
           needAuth: true,
-          historyList: [],
-          debugInfo: '用户未授权' // 添加调试信息
+          historyList: []
         });
         return;
       }
@@ -47,25 +45,31 @@ Page({
       const historyList = await HistoryManager.getHistory();
       
       console.log('查询到的历史记录:', historyList);
-      console.log('历史记录数量:', historyList.length); // 添加调试信息
+      console.log('历史记录数量:', historyList.length);
+      console.log('第一条记录结构:', historyList[0]);
       
       // 格式化时间显示
-      const formattedList = historyList.map(item => ({
-        ...item,
-        createTime: this.formatTime(item.createTime)
-      }));
+      const formattedList = historyList.map((item, index) => {
+        console.log(`记录${index}:`, item);
+        return {
+          ...item,
+          createTime: this.formatTime(item.createTime)
+        };
+      });
+      
+      console.log('格式化后的列表:', formattedList);
       
       this.setData({
         historyList: formattedList,
         loading: false,
-        needAuth: false,
-        debugInfo: `已加载${formattedList.length}条记录，用户ID: ${userInfo.openid}` // 添加调试信息
+        needAuth: false
+      }, () => {
+        console.log('setData完成，当前historyList长度:', this.data.historyList.length);
       });
     } catch (error) {
       console.error('加载历史记录失败:', error);
       this.setData({ 
-        loading: false,
-        debugInfo: `加载失败: ${error.message}` // 添加调试信息
+        loading: false
       });
       wx.showToast({
         title: '加载失败',

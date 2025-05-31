@@ -265,3 +265,278 @@
   transform: scale(0.95);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
 }
+
+.result-container {
+  padding: 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* 媒体预览区域 */
+.media-preview {
+  margin-bottom: 30rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.preview-image, .preview-video {
+  width: 100%;
+  max-height: 400rpx;
+  background: #f8f9fa;
+}
+
+/* 结果卡片容器 */
+.result-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* 卡片基础样式 */
+.result-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.card-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.card-title-section {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* 置信度徽章 */
+.confidence-badge {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(79, 172, 254, 0.3);
+}
+
+.confidence-text {
+  color: white;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+/* 健康评分 */
+.health-score {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.score-text {
+  color: #2d3748;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+/* 卡片内容 */
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.info-item.primary {
+  margin-bottom: 10rpx;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #718096;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+/* 物种名称特殊样式 */
+.species-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #667eea;
+  text-align: center;
+  padding: 10rpx 0;
+}
+
+/* 健康状态样式 */
+.health-status {
+  text-align: center;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  font-weight: 600;
+  font-size: 32rpx;
+}
+
+.health-status.healthy {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #22543d;
+}
+
+.health-status.unhealthy {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #c53030;
+}
+
+.status-text {
+  font-size: 32rpx;
+}
+
+/* 特征标签 */
+.characteristics {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.characteristic-tag {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 疾病列表 */
+.diseases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.disease-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.disease-item {
+  background: #fed7d7;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #e53e3e;
+}
+
+.disease-name {
+  color: #c53030;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+/* 治疗建议内容 */
+.treatment-content {
+  background: #f7fafc;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #667eea;
+}
+
+.treatment-text {
+  color: #2d3748;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+  padding: 0 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  border: 2rpx solid #667eea;
+}
+
+.btn-icon {
+  font-size: 32rpx;
+}
+
+.btn-text {
+  font-size: 28rpx;
+}
+
+/* 响应式调整 */
+@media (max-width: 750rpx) {
+  .result-container {
+    padding: 16rpx;
+  }
+  
+  .result-card {
+    padding: 24rpx;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+}
