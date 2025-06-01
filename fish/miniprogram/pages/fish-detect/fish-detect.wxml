@@ -31,13 +31,7 @@
     </button>
   </view>
 
-  <!-- 分析进度组件 -->
-  <analysis-progress 
-    wx:if="{{isAnalyzing}}"
-    is-analyzing="{{isAnalyzing}}"
-    media-type="{{mediaType}}"
-    progress="{{analysisProgress}}">
-  </analysis-progress>
+
 
   <!-- 分析结果组件 -->
   <view wx:if="{{showResult && result}}" class="result-container">
