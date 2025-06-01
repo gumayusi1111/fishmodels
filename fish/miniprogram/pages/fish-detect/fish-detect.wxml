@@ -17,7 +17,8 @@
 
   <!-- 媒体预览 -->
   <view wx:if="{{mediaUrl}}" class="media-preview">
-    <video wx:if="{{mediaType === 'video'}}" id="preview-video" class="preview-video" src="{{mediaUrl}}" controls></video>
+    <image wx:if="{{mediaType === 'image'}}" src="{{mediaUrl}}" class="preview-image" mode="aspectFit"></image>
+    <video wx:elif="{{mediaType === 'video'}}" id="preview-video" class="preview-video" src="{{mediaUrl}}" controls></video>
     
     <view class="media-info">
       <text class="media-size">{{mediaSize}}</text>

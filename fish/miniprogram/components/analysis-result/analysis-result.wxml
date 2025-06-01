@@ -1,87 +1,90 @@
 <view class="result-container" wx:if="showResult && result">
   <!-- 媒体预览区域 -->
-  <view class="media-preview">
-    <image wx:if="mediaType === 'image'" src="{{mediaUrl}}" class="preview-image" mode="aspectFit"></image>
-    <video wx:elif="mediaType === 'video'" src="{{mediaUrl}}" class="preview-video" controls></video>
-  </view>
+  <view class="analysis-result">
+    <!-- 删除媒体预览区域 -->
+    <!-- <view class="media-preview">
+      <image wx:if="mediaType === 'image'" src="{{mediaUrl}}" class="preview-image" mode="aspectFit"></image>
+      <video wx:elif="mediaType === 'video'" src="{{mediaUrl}}" class="preview-video" controls></video>
+    </view> -->
 
-  <!-- 分析结果卡片 -->
-  <view class="result-cards">
-    <!-- 1. 物种信息卡片 -->
-    <view class="result-card species-card" wx:if="result.species">
-      <view class="card-header">
-        <view class="card-icon species-icon">🐠</view>
-        <view class="card-title-section">
-          <text class="card-title">物种鉴定</text>
-          <view class="confidence-badge" wx:if="result.confidence">
-            <text class="confidence-text">{{result.confidence}}%</text>
+    <!-- 分析结果卡片 -->
+    <view class="result-cards">
+      <!-- 1. 物种信息卡片 -->
+      <view class="result-card species-card" wx:if="result.species">
+        <view class="card-header">
+          <view class="card-icon species-icon">🐠</view>
+          <view class="card-title-section">
+            <text class="card-title">物种鉴定</text>
+            <view class="confidence-badge" wx:if="result.confidence">
+              <text class="confidence-text">{{result.confidence}}%</text>
+            </view>
           </view>
         </view>
-      </view>
-      <view class="card-content">
-        <view class="info-item primary">
-          <text class="species-name">{{result.species}}</text>
-        </view>
-        <view class="info-item" wx:if="result.description">
-          <text class="info-label">描述</text>
-          <text class="info-value">{{result.description}}</text>
-        </view>
-        <view class="info-item" wx:if="result.habitat">
-          <text class="info-label">栖息地</text>
-          <text class="info-value">{{result.habitat}}</text>
-        </view>
-        <view class="characteristics" wx:if="result.characteristics && result.characteristics.length > 0">
-          <text class="info-label">特征</text>
-          <view class="tags-container">
-            <text wx:for="{{result.characteristics}}" wx:key="index" class="characteristic-tag">{{item}}</text>
+        <view class="card-content">
+          <view class="info-item primary">
+            <text class="species-name">{{result.species}}</text>
           </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 2. 健康状态卡片 -->
-    <view class="result-card health-card" wx:if="result.health">
-      <view class="card-header">
-        <view class="card-icon health-icon">💚</view>
-        <view class="card-title-section">
-          <text class="card-title">健康评估</text>
-          <view class="health-score" wx:if="result.healthScore">
-            <text class="score-text">{{result.healthScore}}/100</text>
+          <view class="info-item" wx:if="result.description">
+            <text class="info-label">描述</text>
+            <text class="info-value">{{result.description}}</text>
           </view>
-        </view>
-      </view>
-      <view class="card-content">
-        <view class="info-item primary">
-          <view class="health-status {{result.health === '健康' ? 'healthy' : 'unhealthy'}}">
-            <text class="status-text">{{result.health}}</text>
+          <view class="info-item" wx:if="result.habitat">
+            <text class="info-label">栖息地</text>
+            <text class="info-value">{{result.habitat}}</text>
           </view>
-        </view>
-        <view class="info-item" wx:if="result.disease && result.disease !== '无'">
-          <text class="info-label">疾病状态</text>
-          <text class="info-value">{{result.disease}}</text>
-        </view>
-        <view class="diseases-list" wx:if="result.diseases && result.diseases.length > 0">
-          <text class="info-label">检测到的疾病</text>
-          <view class="disease-items">
-            <view wx:for="{{result.diseases}}" wx:key="index" class="disease-item">
-              <text class="disease-name">{{item}}</text>
+          <view class="characteristics" wx:if="result.characteristics && result.characteristics.length > 0">
+            <text class="info-label">特征</text>
+            <view class="tags-container">
+              <text wx:for="{{result.characteristics}}" wx:key="index" class="characteristic-tag">{{item}}</text>
             </view>
           </view>
         </view>
       </view>
-    </view>
 
-    <!-- 3. 治疗建议卡片 -->
-    <view class="result-card treatment-card" wx:if="result.treatment">
-      <view class="card-header">
-        <view class="card-icon treatment-icon">💡</view>
-        <view class="card-title-section">
-          <text class="card-title">治疗建议</text>
+      <!-- 2. 健康状态卡片 -->
+      <view class="result-card health-card" wx:if="result.health">
+        <view class="card-header">
+          <view class="card-icon health-icon">💚</view>
+          <view class="card-title-section">
+            <text class="card-title">健康评估</text>
+            <view class="health-score" wx:if="result.healthScore">
+              <text class="score-text">{{result.healthScore}}/100</text>
+            </view>
+          </view>
+        </view>
+        <view class="card-content">
+          <view class="info-item primary">
+            <view class="health-status {{result.health === '健康' ? 'healthy' : 'unhealthy'}}">
+              <text class="status-text">{{result.health}}</text>
+            </view>
+          </view>
+          <view class="info-item" wx:if="result.disease && result.disease !== '无'">
+            <text class="info-label">疾病状态</text>
+            <text class="info-value">{{result.disease}}</text>
+          </view>
+          <view class="diseases-list" wx:if="result.diseases && result.diseases.length > 0">
+            <text class="info-label">检测到的疾病</text>
+            <view class="disease-items">
+              <view wx:for="{{result.diseases}}" wx:key="index" class="disease-item">
+                <text class="disease-name">{{item}}</text>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
-      <view class="card-content">
-        <view class="treatment-content">
-          <text class="treatment-text">{{result.treatment}}</text>
+
+      <!-- 3. 治疗建议卡片 -->
+      <view class="result-card treatment-card" wx:if="result.treatment">
+        <view class="card-header">
+          <view class="card-icon treatment-icon">💡</view>
+          <view class="card-title-section">
+            <text class="card-title">治疗建议</text>
+          </view>
+        </view>
+        <view class="card-content">
+          <view class="treatment-content">
+            <text class="treatment-text">{{result.treatment}}</text>
+          </view>
         </view>
       </view>
     </view>
