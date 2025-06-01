@@ -173,6 +173,11 @@ Page({
     });
   },
 
+  // 删除 shareDetail 方法
+  // shareDetail() {
+  //   // 删除整个方法
+  // },
+
   // 分享详情
   shareDetail() {
     const record = this.data.currentDetail;

@@ -67,6 +67,7 @@
   </view>
 
   <!-- 空状态 -->
+  <!-- 暂无历史记录 -->
   <view wx:else class="empty-state">
     <view class="empty-icon">📝</view>
     <text class="empty-title">暂无历史记录</text>
@@ -143,7 +144,7 @@
             <view class="card-content">
               <view class="info-item primary">
                 <view class="health-status {{(currentDetail.result.health === '健康' || currentDetail.result.healthStatus === 'healthy') ? 'healthy' : 'unhealthy'}}">
-                  <text class="status-text">{{currentDetail.result.health || (currentDetail.result.healthStatus === 'healthy' ? '健康' : currentDetail.result.healthStatus === 'abnormal' ? '异常' : '疑似异常')}}</text>
+                  <text class="status-text">{{currentDetail.result.health || (currentDetail.result.healthStatus === '健康' ? '健康' : currentDetail.result.healthStatus === 'abnormal' ? '异常' : '疑似异常')}}</text>
                 </view>
               </view>
               <view class="info-item" wx:if="{{currentDetail.result.disease && currentDetail.result.disease !== '无'}}">
@@ -207,7 +208,6 @@
       </scroll-view>
       
       <view class="detail-footer">
-        <button class="action-btn share-btn" bindtap="shareDetail">分享</button>
         <button class="action-btn delete-btn" bindtap="deleteHistory" data-id="{{currentDetail._id}}">删除</button>
       </view>
     </view>
