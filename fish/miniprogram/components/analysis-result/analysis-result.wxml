@@ -85,26 +85,6 @@
         </view>
       </view>
     </view>
-
-    <!-- 4. 视频分析卡片 (仅视频时显示) -->
-    <view class="result-card video-card" wx:if="mediaType === 'video' && result.videoAnalysis">
-      <view class="card-header">
-        <view class="card-icon video-icon">📹</view>
-        <view class="card-title-section">
-          <text class="card-title">视频分析</text>
-        </view>
-      </view>
-      <view class="card-content">
-        <view class="info-item" wx:if="result.videoAnalysis.duration">
-          <text class="info-label">时长</text>
-          <text class="info-value">{{result.videoAnalysis.duration}} 秒</text>
-        </view>
-        <view class="info-item" wx:if="result.videoAnalysis.advice">
-          <text class="info-label">分析建议</text>
-          <text class="info-value">{{result.videoAnalysis.advice}}</text>
-        </view>
-      </view>
-    </view>
   </view>
 
   <!-- 操作按钮 -->

@@ -27,6 +27,9 @@ exports.main = async (event, context) => {
       case 'treatmentAdvice':
         result = await handleTreatmentAdvice(event, aiConfig);
         break;
+      case 'comprehensiveAnalysis':
+        result = await handleComprehensiveAnalysis(event, aiConfig);
+        break;
       default:
         throw new Error('未知的操作类型');
     }
@@ -261,5 +264,94 @@ async function callGPTAPI(aiConfig, prompt, imageUrl = null) {
     }
     
     throw new Error(`API调用失败: ${error.message}`);
+  }
+}
+
+// 新增：处理综合分析
+async function handleComprehensiveAnalysis(event, aiConfig) {
+  const { species, yoloDetection, knowledgeBase } = event;
+  
+  try {
+    // 读取知识库文件
+    const fs = require('fs');
+    const path = require('path');
+    const knowledgeContent = fs.readFileSync(path.join(__dirname, 'know.txt'), 'utf8');
+    
+    // 构建GPT分析提示词
+    const prompt = `
+作为专业的鱼类疾病诊断专家，请基于以下信息进行综合分析：
+
+**检测结果：**
+- 鱼类品种：${species?.species || '未识别'}
+- 品种置信度：${species?.confidence || 0}%
+- YOLO检测结果：${JSON.stringify(yoloDetection)}
+
+**专业知识库：**
+${knowledgeContent}
+
+请在现有数据结构基础上，完善以下字段的内容：
+
+1. **species**: 完善品种信息
+2. **confidence**: 综合置信度
+3. **health**: 健康状态评估
+4. **healthScore**: 健康评分(0-100)
+5. **diseases**: 检测到的疾病列表
+6. **treatment**: 详细治疗建议
+7. **description**: 品种详细描述
+8. **habitat**: 栖息地和饲养环境要求
+9. **characteristics**: 品种特征列表
+
+请返回JSON格式，严格按照现有字段结构：
+{
+  "species": "品种名称",
+  "confidence": 置信度数值,
+  "health": "健康状态",
+  "healthScore": 评分数值,
+  "diseases": ["疾病1", "疾病2"],
+  "treatment": "详细治疗建议",
+  "description": "品种详细描述",
+  "habitat": "栖息地和饲养要求",
+  "characteristics": ["特征1", "特征2", "特征3"]
+}
+`;
+    
+    // 调用GPT API
+    const gptResponse = await callGPTAPI(aiConfig, prompt);
+    
+    // 解析GPT响应
+    const analysisResult = parseGPTResponse(gptResponse, {
+      species: species?.species || '未知品种',
+      confidence: species?.confidence || 0,
+      health: '健康',
+      healthScore: 85,
+      diseases: [],
+      treatment: '暂无特殊治疗建议，请保持良好的水质环境。',
+      description: '暂无详细描述',
+      habitat: '请根据品种特性提供适宜的饲养环境',
+      characteristics: ['待补充特征信息']
+    });
+    
+    return {
+      success: true,
+      data: analysisResult
+    };
+    
+  } catch (error) {
+    console.error('综合分析失败:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: {
+        species: species?.species || '未知品种',
+        confidence: species?.confidence || 0,
+        health: '无法评估',
+        healthScore: 0,
+        diseases: [],
+        treatment: '分析失败，请重试',
+        description: '分析失败',
+        habitat: '分析失败',
+        characteristics: []
+      }
+    };
   }
 }
