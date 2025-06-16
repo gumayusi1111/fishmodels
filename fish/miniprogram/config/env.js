@@ -1,13 +1,13 @@
 // 云开发环境配置
 const CLOUD_CONFIG = {
   // 开发环境ID（需要在微信开发者工具中创建）
-  envId: 'cloud1-0g1w6ebyd5d1d370', // 确保这是正确的环境ID
+  envId: '', // 确保这是正确的环境ID
   
   // 环境配置选项
   environments: {
     // 开发环境
     development: {
-      envId: 'cloud1-0g1w6ebyd5d1d370', // 使用实际的环境ID
+      envId: '', // 使用实际的环境ID
       name: '开发环境'
     },
     // 测试环境

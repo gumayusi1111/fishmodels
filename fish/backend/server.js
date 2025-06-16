@@ -4,6 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const { inference } = require('./predictor/modelInfer');
 
 const app = express();
 const PORT = 3000;
@@ -144,6 +145,28 @@ app.get('/health', (req, res) => {
     message: '视频抽帧服务运行正常',
     activeFrames: frameFiles.size
   });
+});
+
+// =========================
+// 图片疾病检测接口
+// =========================
+app.post('/predict', upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: '未收到图片文件' });
+  }
+
+  try {
+    // 调用推理模块
+    const result = await inference(req.file.path);
+
+    // 推理完成后删除临时上传文件，避免磁盘堆积
+    fs.unlink(req.file.path, () => {});
+
+    res.json(result);
+  } catch (err) {
+    console.error('[predict] 推理失败:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

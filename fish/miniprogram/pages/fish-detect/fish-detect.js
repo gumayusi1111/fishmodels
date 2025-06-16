@@ -921,16 +921,21 @@ Page({
   // 添加清理帧文件的方法
   async cleanupFrameFile(frameId) {
     try {
-      const response = await wx.request({
-        url: 'http://localhost:3000/cleanup-frame/' + frameId,
-        method: 'DELETE'
+      const res = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `http://127.0.0.1:3000/cleanup-frame/${frameId}`,
+          method: 'DELETE',
+          success: resolve,
+          fail: reject
+        });
       });
-      
-      if (response.data.success) {
-        console.log('帧文件已清理:', frameId);
+      if (res && res.data && res.data.success) {
+        console.log('帧文件已删除');
+      } else {
+        console.log('帧文件删除接口响应异常');
       }
     } catch (error) {
-      console.error('清理帧文件失败:', error);
+      console.warn('清理帧文件失败:', error);
     }
   },
 
